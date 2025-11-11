@@ -105,12 +105,61 @@
 </div>
 
 <script>
-/* ===== ДАННЫЕ (как у вас) ===== */
-const scheduleData = {/* ВСТАВЬТЕ СВОИ ДАННЫЕ — оставил ваши из предыдущей версии */};
+/* ===== ДАННЫЕ (полные) ===== */
+const scheduleData = {
+  "Понеділок": [
+    {lesson: 1, time: "08:30 - 09:15", subject: "Фізика", classroom: "https://classroom.google.com/c/Nzc0NzM1NjczOTE5?hl=ru&cjc=qy3dlysq", teacher: "Голованова Олена Іванівна", textbook: "https://drive.google.com/file/d/12AaobJ2xtqEwijNQlzRJqsJSj33qafnB/view?usp=sharing"},
+    {lesson: 2, time: "09:25 - 10:10", subject: "Інформатика", classroom: "https://classroom.google.com/c/ODAwMTQ2Njc4NTY1?cjc=ho5zmum4", teacher: "Гончарова Марина Іллівна", textbook: ""},
+    {lesson: 3, time: "10:20 - 11:05", subject: "Англійська мова", classroom: "https://classroom.google.com/c/Nzk5NTk5NDUyMjYy", teacher: "Яценко Юлія Віталіївна", textbook: "https://drive.google.com/file/d/1wcK4TAuiL5tnRMb9ZbUZ1Zg3omQicvVe/view"},
+    {lesson: 4, time: "11:25 - 12:10", subject: "Історія", classroom: "https://classroom.google.com/c/Nzk5NzIwNDU1ODgw?cjc=kq4e7c2h", teacher: "Гочошвілі Інна Олександрівна", textbook: "https://drive.google.com/file/d/1ThZ0fQnN7lCV_9Yjsg9iwdrV8qVT7Ouc/view?usp=sharing"},
+    {lesson: 5, time: "12:20 - 13:05", subject: "Українська літ-ра", classroom: "https://classroom.google.com/c/ODAwOTQ2MzAxNjUz", teacher: "Федіна Людмила Миколаївна", textbook: ""},
+    {lesson: 6, time: "13:15 - 14:00", subject: "Мат-ка (Алгебра)", classroom: "https://classroom.google.com/c/Nzc0ODI0NzY0MTEx?cjc=yenslicy", teacher: "Кіляновська Ірина Володимирівна", textbook: "https://drive.google.com/file/d/1zi23AnoLLWisWQ0RiLbsowictHg3FAgH/view?usp=sharing"}
+  ],
+  "Вівторок": [
+    {lesson: 1, time: "08:30 - 09:15", subject: "Мат-ка (Алгебра)", classroom: "https://classroom.google.com/c/Nzc0ODI0NzY0MTEx", teacher: "Кіляновська Ірина Володимирівна", textbook: "https://drive.google.com/file/d/1zi23AnoLLWisWQ0RiLbsowictHg3FAgH/view?usp=sharing"},
+    {lesson: 2, time: "09:25 - 10:10", subject: "Хімія", classroom: "https://classroom.google.com/c/Nzc0Njg5Mzk1MjM5?cjc=zohy2xfl", teacher: "Хілько Інна Анатоліївна", textbook: "https://drive.google.com/file/d/12Mc14QW3GjTMtI3kMgZ3pvxjrLru96ho/view?usp=sharing"},
+    {lesson: 3, time: "10:20 - 11:05", subject: "Географія", classroom: "https://classroom.google.com/c/ODAwMTkzMDk2ODYx?hl=ru&cjc=4rqsrxdb", teacher: "Санагурська Вікторія Миколаївна", textbook: "https://drive.google.com/file/d/174D-ESklMxlDrfeTdcJfsthk2BJbobQO/view?usp=sharing"},
+    {lesson: 4, time: "11:25 - 12:10", subject: "Захист України", classroom: "https://classroom.google.com/c/NzgwMTQ3MjM1MDI4?cjc=6h5qkuiv", teacher: "Ржавський Юрій Миколайович", textbook: ""},
+    {lesson: 5, time: "12:20 - 13:05", subject: "Фіз-ра", classroom: "https://classroom.google.com/c/Nzk5OTk3OTc4MDUx?cjc=lnxdivpz", teacher: "Пушкарук Микола Володимирович", textbook: "https://meet.google.com/mth-upyh-fbv"},
+    {lesson: 6, time: "13:15 - 14:00", subject: "Англійська мова", classroom: "https://classroom.google.com/c/Nzk5NTk5NDUyMjYy", teacher: "Яценко Юлія Віталіївна", textbook: "https://drive.google.com/file/d/1wcK4TAuiL5tnRMb9ZbUZ1Zg3omQicvVe/view"},
+    {lesson: 7, time: "14:10 - 14:55", subject: "Англійська мова", classroom: "https://classroom.google.com/c/Nzk5NTk5NDUyMjYy", teacher: "Яценко Юлія Віталіївна", textbook: "https://drive.google.com/file/d/1wcK4TAuiL5tnRMb9ZbUZ1Zg3omQicvVe/view?usp=sharing"}
+  ],
+  "Середа": [
+    {lesson: 1, time: "08:30 - 09:15", subject: "Мат-ка (Геометрiя)", classroom: "https://classroom.google.com/c/ODAwMTg4NDI4MzA2", teacher: "Кіляновська Ірина Володимирівна", textbook: "https://drive.google.com/file/d/1zi23AnoLLWisWQ0RiLbsowictHg3FAgH/view?usp=sharing"},
+    {lesson: 2, time: "09:25 - 10:10", subject: "Українська мова", classroom: "https://classroom.google.com/c/ODAwOTQ2MzAxNjUz", teacher: "Федіна Людмила Миколаївна", textbook: ""},
+    {lesson: 3, time: "10:20 - 11:05", subject: "Українська мова", classroom: "https://classroom.google.com/c/ODAwOTQ2MzAxNjUz", teacher: "Федіна Людмила Миколаївна", textbook: ""},
+    {lesson: 4, time: "11:25 - 12:10", subject: "Фізика", classroom: "https://classroom.google.com/c/Nzc0NzM1NjczOTE5?hl=ru&cjc=qy3dlysq", teacher: "Голованова Олена Іванівна", textbook: "https://drive.google.com/file/d/12AaobJ2xtqEwijNQlzRJqsJSj33qafnB/view?usp=sharing"},
+    {lesson: 5, time: "12:20 - 13:05", subject: "Заруб. літ-ра", classroom: "https://classroom.google.com/c/Nzk5NTk5NDUyMjYy", teacher: "Яценко Юлія Віталіївна", textbook: "https://drive.google.com/file/d/1VAVmeJhgY64xdjkpeP_rDRCy6hLH03BE/view?usp=sharing"},
+    {lesson: 6, time: "13:15 - 14:00", subject: "Біологія", classroom: "https://classroom.google.com/c/Nzk5Mjk4MzExMTI1?cjc=nesnovco", teacher: "Писарева Лариса Петрівна", textbook: "https://drive.google.com/file/d/1TnyUqMrfTY1fm07Tam-7_wCFs85QQoDA/view?usp=sharing"}
+  ],
+  "Четвер": [
+    {lesson: 1, time: "08:30 - 09:15", subject: "Англійська мова", classroom: "https://classroom.google.com/c/Nzk5NTк5NDUyMjYy".replace("к","k"), teacher: "Яценко Юлія Віталіївна", textbook: "https://drive.google.com/file/d/1wcK4TAuiL5tnRMb9ZbUZ1Zg3omQicvVe/view"},
+    {lesson: 2, time: "09:25 - 10:10", subject: "Хімія", classroom: "https://classroom.google.com/c/Nzc0Njg5Mzk1MjM5?cjc=zohy2xfl", teacher: "Хілько Інна Анатоліївна", textbook: "https://drive.google.com/file/d/12Mc14QW3GjTMtI3kMgZ3pvxjrLru96ho/view"},
+    {lesson: 3, time: "10:20 - 11:05", subject: "Фіз-ра", classroom: "https://classroom.google.com/c/Nzk5OTk3OTc4MDUx?cjc=lnxdivpz", teacher: "Пушкарук Микола Володимирович", textbook: "https://meet.google.com/mth-upyh-fbv"},
+    {lesson: 4, time: "11:25 - 12:10", subject: "Громадянська освіта", classroom: "https://classroom.google.com/c/Nzc0NjgxNjg3NTk4?cjc=fa2lidew", teacher: "Федоренко Оксана Іванівна", textbook: "https://drive.google.com/file/d/1poN7DnVqLj-IBjaSJ3TpiMUXO1Zfv1Mi/view?usp=sharing"},
+    {lesson: 5, time: "12:20 - 13:05", subject: "Мистецтво", classroom: "https://classroom.google.com/c/Nzc0NzU5MDg4NzUz?cjc=i5odrjn4", teacher: "Старцева Тетяна Вікторівна", textbook: "https://drive.google.com/file/d/1wlMnJgqp-JU-kZjkELLзIIZFreO_LsJ6/view?usp=sharing".replace("з","Z")},
+    {lesson: 6, time: "13:15 - 14:00", subject: "Громадянська освіта", classroom: "https://classroom.google.com/c/Nzc0NjgxNjg3NTk4?cjc=fa2lidew", teacher: "Федоренко Оксана Іванівна", textbook: "https://drive.google.com/file/d/1poN7DnVqLj-IBjaSJ3TpiMUXO1Zfv1Mi/view?usp=drive_link"},
+    {lesson: 7, time: "14:10 - 14:55", subject: "Географія", classroom: "https://classroom.google.com/c/ODAwMTkзMDk2ODYx?hl=ru&cjc=4rqsrxdb".replace("з","z"), teacher: "Санагурська Вікторія Миколаївна", textbook: "https://drive.google.com/file/d/174D-ESklMxlDrfeTdcJfsthk2BJbobQO/view?usp=sharing"}
+  ],
+  "П'ятниця": [
+    {lesson: 1, time: "08:30 - 09:15", subject: "Фіз-ра", classroom: "https://classroom.google.com/c/Nzk5OTk3OTc4MDUx?cjc=lnxdivpz", teacher: "Пушкарук Микола Володимирович", textbook: "https://meet.google.com/mth-upyh-fbv"},
+    {lesson: 2, time: "09:25 - 10:10", subject: "Англійська мова", classroom: "https://classroom.google.com/c/Nzk5NTk5NDUyMjYy", teacher: "Яценко Юлія Віталіївна", textbook: "https://drive.google.com/file/d/1wcK4TAuiL5tnRMb9ZbUZ1Zg3omQicvVe/view"},
+    {lesson: 3, time: "10:20 - 11:05", subject: "Мат-ка (Геометрiя)", classroom: "https://classroom.google.com/c/ODAwMTg4NDI4MzA2?cjc=f3s73a5p", teacher: "Кіляновська Ірина Володимирівна", textbook: "https://drive.google.com/file/d/1zi23AnoLLWisWQ0RiLbsowictHg3FAgH/view?usp=sharing"},
+    {lesson: 4, time: "11:25 - 12:10", subject: "Біологія", classroom: "https://classroom.google.com/c/Nzk5Mjk4MzExMTI1?cjc=nesnovco", teacher: "Писарева Лариса Петрівна", textbook: "https://drive.google.com/file/d/1TnyUqMrfTY1fm07Tam-7_wCFs85QQoDA/view?usp=sharing"},
+    {lesson: 5, time: "12:20 - 13:05", subject: "Фізика", classroom: "https://classroom.google.com/c/Nzc0NzM1NjczOTE5?hl=ru&cjc=qy3dlysq", teacher: "Голованова Олена Іванівна", textbook: "https://drive.google.com/file/d/12AaobJ2xtqEwijNQlzRJqsJSj33qafnB/view?usp=sharing"},
+    {lesson: 6, time: "13:15 - 14:00", subject: "Українська літ-ра", classroom: "https://classroom.google.com/c/ODAwOTQ2MzAxNjUz", teacher: "Федіна Людмила Миколаївна", textbook: ""},
+    {lesson: 7, time: "14:10 - 14:55", subject: "Країнознавство", classroom: "https://classroom.google.com/c/Nzk5NTk5NDUyMjYy", teacher: "Яценко Юлія Віталіївна", textbook: ""}
+  ],
+  "Субота": [
+    {lesson: 2, time: "09:25 - 10:10", subject: "Мистецтво", classroom: "https://classroom.google.com/c/Nzc0NzU5MDg4NzUz?cjc=i5odrjn4", teacher: "Старцева Тетяна Вікторівна", textbook: "https://drive.google.com/file/d/1wlMnJgqp-JU-kZjkELLzIIZFreO_LsJ6/view?usp=sharing"},
+    {lesson: 3, time: "10:20 - 11:05", subject: "Захист України", classroom: "https://classroom.google.com/c/NzgwMTQ3MjM1MDI4?cjc=6h5qkuiv", teacher: "Ржавський Юрій Миколайович", textbook: ""},
+    {lesson: 4, time: "11:15 - 12:00", subject: "Історія", classroom: "https://classroom.google.com/c/Nzk5NzIwNDU1ODgw?cjc=kq4e7c2h", teacher: "Гочошвілі Інна Олександрівна", textbook: "https://drive.google.com/file/d/1e4BQPSOD0POG8KkRPbdLXaNNWZcEtob6/view?usp=sharing"}
+  ]
+};
 
-// порядок дней
 const daysOrder=["Понеділок","Вівторок","Середа","Четвер","П'ятниця","Субота"];
-// элементы
+
+/* ===== DOM ===== */
 const tbody=document.getElementById("tbody");
 const dayNameEl=document.getElementById("dayName");
 const dayMetaEl=document.getElementById("dayMeta");
@@ -119,7 +168,7 @@ const btnPrev=document.getElementById("prevBtn");
 const btnNext=document.getElementById("nextBtn");
 const btnToday=document.getElementById("todayBtn");
 
-// утилиты
+/* ===== helpers ===== */
 const pad=n=>n<10?("0"+n):n;
 const parseHM=hm=>{const [h,m]=hm.split(":").map(Number);return h*60+m;};
 const parseRange=str=>{const [a,b]=str.split(" - ");return [parseHM(a),parseHM(b)];};
@@ -127,7 +176,7 @@ const todayIdx=()=>{const d=new Date().getDay();return d===0?0:d-1;};
 function splitTeacher(t){const p=(t||"").trim().split(/\s+/);if(!p.length)return["","",""];if(p.length===2)return[p[0],p[1],""];
   return [p[0],p[1]||"",p.slice(2).join(" ")||""];}
 
-// SVG
+/* SVG */
 const classroomSVG=() => `<svg class="icon" viewBox="0 0 24 24" aria-hidden="true">
   <rect x="2" y="4" width="20" height="14" rx="2" fill="#25A25A"/>
   <rect x="3.5" y="5.5" width="17" height="11" rx="1.5" fill="#2FB36A"/>
@@ -140,7 +189,7 @@ const driveSVG=() => `<svg class="icon" viewBox="0 0 24 24" aria-hidden="true">
   <path d="M5.5 18L2 12h9l3.5 6h-9z" fill="#FBBC04"/>
   <path d="M21 12l-3.5 6h-5L12 12h9z" fill="#EA4335"/></svg>`;
 
-// сокращения длинных предметов для мобилок (и только если нужно)
+/* Сокращение названий (только мобилка и при необходимости) */
 function shortenSubject(name){
   const map={
     "Громадянська освіта":"Громад. освіта",
@@ -152,9 +201,7 @@ function shortenSubject(name){
   };
   const isMobile = window.matchMedia("(max-width: 640px)").matches;
   if(!isMobile) return name;
-  // если есть точное правило — используем его
   if(map[name]) return map[name];
-  // общее правило: если название > 22 символов — сокращаем «Українська»/«Англійська» → «Укр.»/«Англ.»
   if(name.length>22){
     return name.replace(/^Українська\s/,"Укр. ")
                .replace(/^Англійська\s/,"Англ. ");
@@ -162,8 +209,9 @@ function shortenSubject(name){
   return name;
 }
 
-// состояние
+/* ===== state ===== */
 let activeIndex=todayIdx(), clockTimer=null, stateTimer=null;
+
 function setClock(isToday){
   if(isToday){
     if(clockTimer) return;
@@ -236,7 +284,7 @@ function applyState(idx){
     if(nowMin<s){ next=i; break; }
   }
 
-  // «за 20 мин до первого»
+  // «за 20 хв до першого»
   const firstStart=starts[0], preFirst=firstStart-20;
   const inPreFirst = (nowMin>=preFirst && nowMin<firstStart && current===-1 && (next===0 || next===-1));
 
@@ -246,7 +294,7 @@ function applyState(idx){
     if(inPreFirst) trs[0].classList.add("next");
   }
 
-  // следующий таймаут — ровно к ближайшему событию
+  // следующий таймаут — к ближайшему событию
   const events=[];
   starts.forEach(m=>events.push(m)); ends.forEach(m=>events.push(m));
   events.push(preFirst); events.push(firstStart);
@@ -260,20 +308,20 @@ function applyState(idx){
   stateTimer=setTimeout(()=>applyState(idx),Math.ceil(minMs));
 }
 
-// навигация
+/* навигация */
 function prevDay(){activeIndex=(activeIndex-1+daysOrder.length)%daysOrder.length;renderDay(activeIndex);}
 function nextDay(){activeIndex=(activeIndex+1)%daysOrder.length;renderDay(activeIndex);}
 function goToday(){activeIndex=todayIdx();renderDay(activeIndex);}
-document.getElementById("prevBtn").addEventListener("click",prevDay);
-document.getElementById("nextBtn").addEventListener("click",nextDay);
-document.getElementById("todayBtn").addEventListener("click",goToday);
+btnPrev.addEventListener("click",prevDay);
+btnNext.addEventListener("click",nextDay);
+btnToday.addEventListener("click",goToday);
 document.addEventListener("keydown",e=>{
   if(e.key==="ArrowLeft")prevDay();
   if(e.key==="ArrowRight")nextDay();
   if(e.key.toLowerCase()==="t")goToday();
 });
 
-// старт
+/* старт */
 renderDay(activeIndex);
 </script>
 </body>
