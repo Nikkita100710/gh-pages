@@ -20,7 +20,7 @@ body{font-family:'Segoe UI',sans-serif;background:linear-gradient(135deg,#667eea
 .day-card{background:#fff;border-radius:16px;padding:24px;box-shadow:0 4px 16px rgba(0,0,0,.15)}
 .day-card.today{background:#d4edda;border:3px solid #28a745}
 table{width:100%;border-collapse:collapse}
-th{background:#667eea;color:#fff;padding:10px;text-align:left;font-weight:600;font-size:.95em}
+th{background:#667eea;color:#fff;padding:10px;text-align:left;font-weight:600;font-size:.85em}
 th:first-child{border-top-left-radius:8px}
 th:last-child{border-top-right-radius:8px}
 td{padding:10px;vertical-align:middle;transition:background-color 240ms ease,color 240ms ease}
@@ -28,11 +28,11 @@ tr:nth-child(even) td{background:#f8f9fa}
 tr:nth-child(odd) td{background:#fff}
 tr.current td{background:#dc3545!important;color:#fff!important}
 tr.next td{background:#90ee90!important;color:#000!important}
-.col-num{width:5.5%;text-align:left;font-weight:600;padding-right:4px}
-.col-time{width:22%;text-align:left;font-weight:600;line-height:1.15;white-space:nowrap}
+.col-num{width:5.5%;text-align:left;font-weight:600;padding-right:4px;font-size:0.85em}
+.col-time{width:18%;text-align:left;font-weight:600;line-height:1.15;white-space:nowrap;font-size:0.8em}
 .col-subject{width:42%;text-align:center}
-.col-teacher{width:30.5%;text-align:left;font-size:.9em;line-height:1.35;padding-left:12px}
-.subject-name{font-weight:bold;margin-bottom:4px}
+.col-teacher{width:30.5%;text-align:left;font-size:.7em;line-height:1.35;padding-left:12px}
+.subject-name{font-weight:bold;margin-bottom:4px;font-size:0.85em}
 .subject-icons{display:flex;gap:12px;margin-top:4px;justify-content:center}
 .icon-button{display:inline-flex;align-items:center;justify-content:center;width:44px;height:44px;padding:10px;border:none;background:transparent;cursor:pointer;border-radius:6px;transition:transform .2s}
 .icon-button:hover:not(.disabled){transform:scale(1.1);background:rgba(102,126,234,.1)}
@@ -48,9 +48,9 @@ body{padding:10px}
 .day-card{padding:16px}
 td{padding:8px}
 th{padding:8px;font-size:.88em}
-.col-time{font-size:.88em}
+.col-time{font-size:0.82em}
 .subject-name{font-size:.94em}
-.col-teacher{font-size:.84em}
+.col-teacher{font-size:.70em}
 .icon-button{width:40px;height:40px;padding:8px}
 .icon-button svg{width:24px;height:24px}
 }
@@ -92,7 +92,7 @@ function G(){return["Неділя","Понеділок","Вівторок","Се
 function TI(){return O.indexOf(G())}
 function PT(t){const [h,m]=t.split(':').map(Number);return h*60+m}
 function FD(it){const n=new Date(),M=["січня","лютого","березня","квітня","травня","червня","липня","серпня","вересня","жовтня","листопада","грудня"];const s=String(n.getSeconds()).padStart(2,'0');if(it){return `${n.getDate()} ${M[n.getMonth()]}, ${String(n.getHours()).padStart(2,'0')}:${String(n.getMinutes()).padStart(2,'0')}:${s}`}else{return `<span class="today-link" onclick="I=TI();R()" title="Повернутися на сьогодні">Сьогодні ${G()}</span>`}}
-function SH(s){const R={"Математика (Геометрія)":"Геометрія","Математика (Геометрiя)":"Геометрія","Мат-ка (Геометрія)":"Геометрія","Мат-ка (Геометрiя)":"Геометрія","Математика (Алгебра)":"Алгебра","Мат-ка (Алгебра)":"Алгебра","Українська література":"Укр. літ-ра","Українська літ-ра":"Укр. літ-ра","Українська мова":"Укр. мова","Англійська мова":"Англ. мова","Громадянська освіта":"Громад. освіта"};return R[s]||s}
+function SH(s){const R={"Математика (Геометрія)":"Геометрія","Математика (Геометрiя)":"Геометрія","Мат-ка (Геометрія)":"Геометрія","Мат-ка (Геометрiя)":"Геометрія","Математика (Алгебра)":"Алгебра","Мат-ка (Алгебра)":"Алгебра","Українська література":"Укр. літ","Українська літ-ра":"Укр. літ","Укр. літ-ра":"Укр. літ","Українська мова":"Укр. мова","Англійська мова":"Англ. мова","Громадянська освіта":"Громад.","Громад. освіта":"Громад.","Країнознавство":"Країнозн.","Заруб. літ-ра":"Заруб.","Захист України":"Зах. Укр.","Інформатика":"Інформ."};return R[s]||s}
 function FT(f){const p=f.trim().split(/\s+/);if(p.length<2)return `<div class="teacher-name"><div>${f}</div></div>`;return `<div class="teacher-name"><div>${p[0]}</div><div>${p[1]}</div><div>${p.slice(2).join(' ')||''}</div></div>`}
 function R(){const d=O[I],l=D[d],b=document.getElementById('scheduleBody'),ti=TI(),it=I===ti;document.getElementById('dayName').textContent=d;document.getElementById('dayDate').innerHTML=FD(it);document.getElementById('dayCard').classList.toggle('today',it);b.innerHTML='';const n=new Date(),cm=n.getHours()*60+n.getMinutes();let ci=-1,ni=-1;if(it){for(let i=0;i<l.length;i++){const [s,e]=l[i].time.split(' - ');const st=PT(s),et=PT(e);if(cm>=st&&cm<et){ci=i;break}else if(cm<st){ni=i;if(i>0){const pe=PT(l[i-1].time.split(' - ')[1]);if(cm>=pe)break}break}}if(ci===-1&&ni===0){const fs=PT(l[0].time.split(' - ')[0]);if(cm>=fs-20&&cm<fs)ni=0;else ni=-1}}l.forEach((ls,idx)=>{const r=document.createElement('tr');if(it){if(idx===ci)r.classList.add('current');else if(idx===ni)r.classList.add('next')}const cb=ls.classroom?`<button class="icon-button" onclick="window.open('${ls.classroom}','_blank')" title="Classroom">${C}</button>`:`<button class="icon-button disabled" title="Classroom">${C}</button>`;const tb=ls.textbook?`<button class="icon-button" onclick="window.open('${ls.textbook}','_blank')" title="Підручник">${V}</button>`:`<button class="icon-button disabled" title="Підручник">${V}</button>`;r.innerHTML=`<td class="col-num">${ls.lesson}</td><td class="col-time">${ls.time}</td><td class="col-subject"><div class="subject-name">${SH(ls.subject)}</div><div class="subject-icons">${cb}${tb}</div></td><td class="col-teacher">${FT(ls.teacher)}</td>`;b.appendChild(r)});if(T)clearTimeout(T);if(S)clearInterval(S);S=setInterval(()=>{document.getElementById('dayDate').innerHTML=FD(it)},1000);if(it){const ev=[];l.forEach(ls=>{const [s,e]=ls.time.split(' - ');ev.push(PT(s),PT(e))});const fs=PT(l[0].time.split(' - ')[0]);ev.push(fs-20);const ne=ev.filter(t=>t>cm).sort((a,b)=>a-b)[0];if(ne){const w=(ne-cm)*60*1000;T=setTimeout(R,w)}}}
 document.getElementById('btnPrev').onclick=()=>{I=(I-1+O.length)%O.length;R()};
