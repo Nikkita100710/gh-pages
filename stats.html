@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Статистика відвідувань</title>
+<style>
+  body{font-family:'Segoe UI',sans-serif;background:#f6f8fc;margin:0;padding:24px;color:#1f2937}
+  .wrap{max-width:900px;margin:0 auto}
+  h1{margin:0 0 12px}
+  .card{background:#fff;border:1px solid #e5e7eb;border-radius:12px;box-shadow:0 4px 16px rgba(0,0,0,.06);padding:18px;margin:12px 0}
+  .grid{display:grid;grid-template-columns:repeat(2,1fr);gap:12px}
+  .stat{display:flex;align-items:center;gap:10px}
+  .big{font-size:2rem;font-weight:800;color:#4f46e5}
+  table{width:100%;border-collapse:collapse}
+  th,td{padding:10px;border-bottom:1px solid #e5e7eb;text-align:left}
+  th{background:#eef2ff}
+  .muted{color:#6b7280}
+  @media (max-width:640px){ .grid{grid-template-columns:1fr} }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>Статистика відвідувань</h1>
+  <div class="card">
+    <div class="grid">
+      <div class="stat">
+        <svg width="22" height="22" viewBox="0 0 24 24"><path d="M3 13h4v8H3v-8zm7-6h4v14h-4V7zm7 3h4v11h-4V10z" fill="#4f46e5"/></svg>
+        <div>
+          <div class="muted">Загалом</div>
+          <div id="total" class="big">—</div>
+        </div>
+      </div>
+      <div class="stat">
+        <svg width="22" height="22" viewBox="0 0 24 24"><path d="M7 11h10v2H7zM7 7h10v2H7zm0 8h10v2H7z" fill="#4f46e5"/></svg>
+        <div>
+          <div class="muted">Сьогодні</div>
+          <div id="today" class="big">—</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
+    <h3 style="margin:0 0 10px">Останні 14 днів</h3>
+    <table>
+      <thead><tr><th>Дата</th><th>Відвідувань</th></tr></thead>
+      <tbody id="days"></tbody>
+    </table>
+    <div class="muted" style="margin-top:8px">Джерело: CountAPI (локальний лічильник без персональних даних)</div>
+  </div>
+</div>
+
+<script>
+const COUNTAPI = 'https://api.countapi.xyz';
+const NS = 'hl-10b-schedule';
+
+async function getKey(key){
+  const r = await fetch(`${COUNTAPI}/get/${NS}/${key}`);
+  if(!r.ok) return null;
+  return r.json();
+}
+async function ensureKey(key){
+  await fetch(`${COUNTAPI}/create?namespace=${encodeURIComponent(NS)}&key=${encodeURIComponent(key)}&value=0`);
+}
+
+async function load(){
+  // total
+  let total = await getKey('total');
+  if(!total){ await ensureKey('total'); total = await getKey('total'); }
+  document.getElementById('total').textContent = total?.value ?? 0;
+
+  // today
+  const todayISO = new Date().toISOString().slice(0,10);
+  let today = await getKey(`day-${todayISO}`);
+  if(!today){ await ensureKey(`day-${todayISO}`); today = await getKey(`day-${todayISO}`); }
+  document.getElementById('today').textContent = today?.value ?? 0;
+
+  // last 14 days
+  const tbody = document.getElementById('days');
+  tbody.innerHTML = '';
+  for(let i=0;i<14;i++){
+    const d = new Date(Date.now() - i*24*60*60*1000);
+    const iso = d.toISOString().slice(0,10);
+    let v = await getKey(`day-${iso}`);
+    if(!v){ await ensureKey(`day-${iso}`); v = await getKey(`day-${iso}`); }
+    const tr = document.createElement('tr');
+    tr.innerHTML = `<td>${iso}</td><td>${v?.value ?? 0}</td>`;
+    tbody.appendChild(tr);
+  }
+}
+load();
+</script>
+</body>
+</html>
