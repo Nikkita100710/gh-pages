@@ -57,7 +57,7 @@
       </div>
 
       <div class="actions">
-        <a id="openPage" class="btn" target="_blank" rel="noopener">Відкрити сторінку розкладу</a>
+        <a id="openPage" class="btn" target="_blank" rel="noopener">Відкрити розклад</a>
         <a id="openJson" class="btn" target="_blank" rel="noopener">Подивитися JSON</a>
       </div>
 
@@ -70,21 +70,20 @@
 
   <script>
     (async () => {
-      // ---- Налаштування: сторінка, для якої показуємо статистику ----
-      // Поточний основний файл розкладу:
+      // Показуємо статистику саме для RozkladMK01.html
       const schedulePath = 'nikkita100710.github.io/gh-pages/RozkladMK01.html';
 
-      // Заповнюємо кнопки-посилання
+      // Кнопки
       document.getElementById('openPage').href = 'https://' + schedulePath;
       document.getElementById('openPage').textContent = 'Відкрити ' + schedulePath.split('/').pop();
       document.getElementById('openJson').href = 'https://hits.sh/' + encodeURIComponent(schedulePath) + '.json';
 
-      // Тягнемо JSON зі статистикою
+      // Тягнемо JSON
       try {
         const res = await fetch('https://hits.sh/' + encodeURIComponent(schedulePath) + '.json', { cache: 'no-store' });
-        const data = await res.json(); // очікуємо { hits, hits_today, ... }
-        document.getElementById('total').textContent = (data && typeof data.hits === 'number') ? data.hits : 0;
-        document.getElementById('today').textContent = (data && typeof data.hits_today === 'number') ? data.hits_today : 0;
+        const data = await res.json(); // { hits, hits_today, ... }
+        document.getElementById('total').textContent  = (data && typeof data.hits === 'number') ? data.hits : 0;
+        document.getElementById('today').textContent  = (data && typeof data.hits_today === 'number') ? data.hits_today : 0;
         console.log('[stats] hits.sh data:', data);
       } catch (e) {
         console.error('[stats] hits.sh error:', e);
