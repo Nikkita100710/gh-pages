@@ -64,7 +64,7 @@ th{padding:8px;font-size:.88em}
 <body>
 <div class="container">
   <div class="header">
-    <div class="visit-badge" id="visitBadge" title="Переглянути статистику">
+    <div class="visit-badge" id="visitBadge" title="Переглянути статистику" onclick="window.open('stats.html','_blank')">
       <svg width="18" height="18" viewBox="0 0 24 24" aria-hidden="true">
         <path d="M3 3h18v2H3V3zm0 7h10v2H3v-2zm0 7h18v2H3v-2z" fill="#667eea"/>
       </svg>
@@ -107,14 +107,6 @@ function PT(t){const [h,m]=t.split(':').map(Number);return h*60+m}
 function FD(it){const n=new Date(),M=["січня","лютого","березня","квітня","травня","червня","липня","серпня","вересня","жовтня","листопада","грудня"];const s=String(n.getSeconds()).padStart(2,'0');if(it){return `${n.getDate()} ${M[n.getMonth()]}, ${String(n.getHours()).padStart(2,'0')}:${String(n.getMinutes()).padStart(2,'0')}:${s}`}else{return `<span class="today-link" onclick="I=TI();R()" title="Повернутися на сьогодні">Сьогодні ${G()}</span>`}}
 function SH(s){const R={"Математика (Геометрія)":"Геометрія","Математика (Геометрiя)":"Геометрія","Мат-ка (Геометрія)":"Геометрія","Мат-ка (Геометрiя)":"Геометрія","Математика (Алгебра)":"Алгебра","Мат-ка (Алгебра)":"Алгебра","Українська література":"Укр. літ","Українська літ-ра":"Укр. літ","Укр. літ-ра":"Укр. літ","Українська мова":"Укр. мова","Англійська мова":"Англ. мова","Громадянська освіта":"Громад.","Громад. освіта":"Громад.","Країнознавство":"Країнозн.","Заруб. літ-ра":"Заруб.","Захист України":"Зах. Укр.","Інформатика":"Інформ."};return R[s]||s}
 function FT(f){const p=f.trim().split(/\s+/);if(p.length<2)return `<div class="teacher-name"><div>${f}</div></div>`;return `<div class="teacher-name"><div>${p[0]}</div><div>${p[1]}</div><div>${p.slice(2).join(' ')||''}</div></div>`}
-const COUNTAPI='https://api.countapi.xyz';const VIS_NS='hl-10b-schedule';const VIS_TOTAL_KEY='total';const todayISO=new Date().toISOString().slice(0,10);const VIS_DAY_KEY=`day-${todayISO}`;const visitBadge=document.getElementById('visitBadge');const visitCountEl=document.getElementById('visitCount');
-function shouldCountNow(){const ts=Number(sessionStorage.getItem('visit_ts')||0);return(Date.now()-ts)>(30*60*1000)}
-function stampCounted(){sessionStorage.setItem('visit_ts',String(Date.now()))}
-async function countapi(path){const r=await fetch(`${COUNTAPI}${path}`);if(!r.ok)throw new Error('countapi failed');return r.json()}
-async function ensureKey(ns,key){await fetch(`${COUNTAPI}/create?namespace=${encodeURIComponent(ns)}&key=${encodeURIComponent(key)}&value=0`)}
-async function updateVisitCounters(){try{if(shouldCountNow()){const [tot]=await Promise.all([countapi(`/hit/${VIS_NS}/${VIS_TOTAL_KEY}`),countapi(`/hit/${VIS_NS}/${VIS_DAY_KEY}`)]);visitCountEl.textContent=tot.value;stampCounted()}else{const tot=await countapi(`/get/${VIS_NS}/${VIS_TOTAL_KEY}`);visitCountEl.textContent=tot.value}}catch(e){try{await ensureKey(VIS_NS,VIS_TOTAL_KEY);await ensureKey(VIS_NS,VIS_DAY_KEY);const tot=await countapi(`/get/${VIS_NS}/${VIS_TOTAL_KEY}`);visitCountEl.textContent=(tot&&typeof tot.value==='number')?tot.value:0}catch(_){visitCountEl.textContent='—'}}}
-updateVisitCounters();
-visitBadge.addEventListener('click',()=>window.open('stats.html','_blank'));
 function R(){const d=O[I],l=D[d],b=document.getElementById('scheduleBody'),ti=TI(),it=I===ti;document.getElementById('dayName').textContent=d;document.getElementById('dayDate').innerHTML=FD(it);document.getElementById('dayCard').classList.toggle('today',it);b.innerHTML='';const n=new Date(),cm=n.getHours()*60+n.getMinutes();let ci=-1,ni=-1;if(it){for(let i=0;i<l.length;i++){const [s,e]=l[i].time.split(' - ');const st=PT(s),et=PT(e);if(cm>=st&&cm<et){ci=i;if(LST!=='current-'+i){SN('🔔 Урок почався',l[i].subject);LST='current-'+i}break}else if(cm<st){ni=i;if(LST&&LST.startsWith('current-')){const prevIdx=parseInt(LST.split('-')[1]);if(prevIdx<l.length){SN('✅ Урок закінчився',l[prevIdx].subject)}LST=null}if(i>0){const pe=PT(l[i-1].time.split(' - ')[1]);if(cm>=pe)break}break}}if(ci===-1&&ni===0){const fs=PT(l[0].time.split(' - ')[0]);if(cm>=fs-20&&cm<fs)ni=0;else ni=-1}}l.forEach((ls,idx)=>{const r=document.createElement('tr');if(it){if(idx===ci)r.classList.add('current');else if(idx===ni)r.classList.add('next')}const cb=ls.classroom?`<button class="icon-button" onclick="window.open('${ls.classroom}','_blank')" title="Classroom">${C}</button>`:`<button class="icon-button disabled" title="Classroom">${C}</button>`;const tb=ls.textbook?`<button class="icon-button" onclick="window.open('${ls.textbook}','_blank')" title="Підручник">${V}</button>`:`<button class="icon-button disabled" title="Підручник">${V}</button>`;r.innerHTML=`<td class="col-num">${ls.lesson}</td><td class="col-time">${ls.time}</td><td class="col-subject"><div class="subject-name">${SH(ls.subject)}</div><div class="subject-icons">${cb}${tb}</div></td><td class="col-teacher">${FT(ls.teacher)}</td>`;b.appendChild(r)});if(T)clearTimeout(T);if(S)clearInterval(S);S=setInterval(()=>{document.getElementById('dayDate').innerHTML=FD(it)},1000);if(it){const ev=[];l.forEach(ls=>{const [s,e]=ls.time.split(' - ');ev.push(PT(s),PT(e))});const fs=PT(l[0].time.split(' - ')[0]);ev.push(fs-20);const ne=ev.filter(t=>t>cm).sort((a,b)=>a-b)[0];if(ne){const w=(ne-cm)*60*1000;T=setTimeout(R,w)}}}
 document.getElementById('btnPrev').onclick=()=>{I=(I-1+O.length)%O.length;R()};
 document.getElementById('btnNext').onclick=()=>{I=(I+1)%O.length;R()};
@@ -123,5 +115,21 @@ RNP();
 I=TI();
 R();
 </script>
+<script>
+(async()=>{
+const path='nikkita100710.github.io/gh-pages/schedule_10b.html';
+try{
+const res=await fetch(`https://hits.sh/${encodeURIComponent(path)}.json`,{cache:'no-store'});
+const data=await res.json();
+const el=document.getElementById('visitCount');
+if(el)el.textContent=(data&&typeof data.hits==='number')?data.hits:'0';
+}catch(e){
+console.error('hits.sh fetch error',e);
+const el=document.getElementById('visitCount');
+if(el)el.textContent='—';
+}
+})();
+</script>
+<img src="https://hits.sh/nikkita100710.github.io/gh-pages/schedule_10b.html.svg?style=flat-square&label=Відвідувань&color=4c1" alt="views" style="position:absolute;width:0;height:0;opacity:0;border:0"/>
 </body>
 </html>
