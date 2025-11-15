@@ -1,17 +1,97 @@
-<script>
-(async () => {
-  // Точный путь без https:// к вашей текущей странице расписания
-  const path = 'nikkita100710.github.io/gh-pages/RozkladMK01.html';
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1.0" />
+  <title>Статистика відвідувань</title>
+  <style>
+    :root{
+      --bg:#f6f8fc; --card:#ffffff; --muted:#6b7280; --ink:#1f2937; --brand:#4f46e5; --line:#e5e7eb;
+    }
+    *{box-sizing:border-box}
+    html,body{height:100%}
+    body{
+      margin:0; font-family:system-ui,-apple-system,Segoe UI,Roboto,Ubuntu,Cantarell,"Helvetica Neue",Arial,"Noto Sans",sans-serif;
+      background:var(--bg); color:var(--ink);
+      display:flex; align-items:flex-start; justify-content:center; padding:24px;
+    }
+    .wrap{width:min(960px,100%); }
+    h1{margin:0 0 16px 0; font-size:clamp(22px,3.5vw,36px); font-weight:800}
+    .card{
+      background:var(--card); border:1px solid var(--line); border-radius:14px;
+      box-shadow:0 6px 20px rgba(0,0,0,.06); padding:18px; margin:12px 0;
+    }
+    .row{display:flex; align-items:center; gap:16px; margin:10px 0}
+    .label{color:var(--muted); min-width:120px}
+    .value{font-size:2rem; font-weight:800; color:var(--brand); line-height:1}
+    .small{font-size:.9rem; color:var(--muted)}
+    .actions{display:flex; gap:10px; margin-top:10px}
+    .btn{
+      background:#eef2ff; color:#3730a3; border:1px solid #c7d2fe; padding:8px 12px; border-radius:10px;
+      text-decoration:none; font-weight:600; display:inline-flex; align-items:center; gap:8px;
+    }
+    .btn:hover{background:#e0e7ff}
+    .badge{
+      display:inline-flex; gap:8px; align-items:center; padding:8px 10px; border:1px solid var(--line);
+      border-radius:12px; background:#fff; font-weight:600; margin:6px 0;
+    }
+    .mono{font-family: ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,"Liberation Mono","Courier New",monospace;}
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <h1>Статистика відвідувань</h1>
 
-  try {
-    const r = await fetch(`https://hits.sh/${encodeURIComponent(path)}.json`, { cache: 'no-store' });
-    const d = await r.json(); // { hits, hits_today, ... }
-    document.getElementById('total').textContent  = d?.hits ?? 0;
-    document.getElementById('today').textContent  = d?.hits_today ?? 0;
-  } catch (e) {
-    console.error('hits.sh error', e);
-    document.getElementById('total').textContent = '—';
-    document.getElementById('today').textContent = '—';
-  }
-})();
-</script>
+    <div class="card">
+      <div class="row">
+        <div class="label">Загалом</div>
+        <div id="total" class="value">—</div>
+      </div>
+      <div class="row">
+        <div class="label">Сьогодні</div>
+        <div id="today" class="value">—</div>
+      </div>
+
+      <div class="badge">
+        Джерело даних: <span class="mono">hits.sh</span>
+      </div>
+
+      <div class="actions">
+        <a id="openPage" class="btn" target="_blank" rel="noopener">Відкрити сторінку розкладу</a>
+        <a id="openJson" class="btn" target="_blank" rel="noopener">Подивитися JSON</a>
+      </div>
+
+      <div class="small" style="margin-top:8px">
+        Підрахунок виконується без персональних даних. Якщо бачите нулі — перевірте,
+        що шлях сторінки в hits.sh збігається з фактичним URL (без <span class="mono">https://</span>).
+      </div>
+    </div>
+  </div>
+
+  <script>
+    (async () => {
+      // ---- Налаштування: сторінка, для якої показуємо статистику ----
+      // Поточний основний файл розкладу:
+      const schedulePath = 'nikkita100710.github.io/gh-pages/RozkladMK01.html';
+
+      // Заповнюємо кнопки-посилання
+      document.getElementById('openPage').href = 'https://' + schedulePath;
+      document.getElementById('openPage').textContent = 'Відкрити ' + schedulePath.split('/').pop();
+      document.getElementById('openJson').href = 'https://hits.sh/' + encodeURIComponent(schedulePath) + '.json';
+
+      // Тягнемо JSON зі статистикою
+      try {
+        const res = await fetch('https://hits.sh/' + encodeURIComponent(schedulePath) + '.json', { cache: 'no-store' });
+        const data = await res.json(); // очікуємо { hits, hits_today, ... }
+        document.getElementById('total').textContent = (data && typeof data.hits === 'number') ? data.hits : 0;
+        document.getElementById('today').textContent = (data && typeof data.hits_today === 'number') ? data.hits_today : 0;
+        console.log('[stats] hits.sh data:', data);
+      } catch (e) {
+        console.error('[stats] hits.sh error:', e);
+        document.getElementById('total').textContent = '—';
+        document.getElementById('today').textContent = '—';
+      }
+    })();
+  </script>
+</body>
+</html>
