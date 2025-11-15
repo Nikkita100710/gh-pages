@@ -1,34 +1,17 @@
-<!DOCTYPE html><html lang="uk"><head>
-<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0">
-<title>Статистика відвідувань</title>
-<style>
-  body{font-family:'Segoe UI',sans-serif;background:#f6f8fc;margin:0;padding:24px;color:#1f2937}
-  .wrap{max-width:900px;margin:0 auto}
-  .card{background:#fff;border:1px solid #e5e7eb;border-radius:12px;box-shadow:0 4px 16px rgba(0,0,0,.06);padding:18px;margin:12px 0}
-  .big{font-size:2rem;font-weight:800;color:#4f46e5}
-  .muted{color:#6b7280}
-</style>
-</head><body><div class="wrap">
-  <h1>Статистика відвідувань</h1>
-  <div class="card">
-    <div class="muted">Загалом</div><div id="total" class="big">—</div>
-    <div class="muted" style="margin-top:10px">Сьогодні</div><div id="today" class="big">—</div>
-    <div class="muted" style="margin-top:12px">Джерело: hits.sh</div>
-  </div>
-</div>
 <script>
-(async()=>{
-  const path='nikkita100710.github.io/gh-pages/schedule_10b.html';
-  try{
-    const r = await fetch(`https://hits.sh/${encodeURIComponent(path)}.json`, {cache:'no-store'});
-    const d = await r.json(); // {hits, hits_today, ...}
-    document.getElementById('total').textContent = d?.hits ?? 0;
-    document.getElementById('today').textContent = d?.hits_today ?? 0;
-  }catch(e){
+(async () => {
+  // Точный путь без https:// к вашей текущей странице расписания
+  const path = 'nikkita100710.github.io/gh-pages/RozkladMK01.html';
+
+  try {
+    const r = await fetch(`https://hits.sh/${encodeURIComponent(path)}.json`, { cache: 'no-store' });
+    const d = await r.json(); // { hits, hits_today, ... }
+    document.getElementById('total').textContent  = d?.hits ?? 0;
+    document.getElementById('today').textContent  = d?.hits_today ?? 0;
+  } catch (e) {
     console.error('hits.sh error', e);
     document.getElementById('total').textContent = '—';
     document.getElementById('today').textContent = '—';
   }
 })();
 </script>
-</body></html>
