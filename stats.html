@@ -3,90 +3,115 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1.0" />
-  <title>Статистика відвідувань</title>
+  <title>Статистика відвідувань — Розклад 10-B</title>
   <style>
     :root{
-      --bg:#f6f8fc; --card:#ffffff; --muted:#6b7280; --ink:#1f2937; --brand:#4f46e5; --line:#e5e7eb;
+      --bg:#f6f8fc; --card:#ffffff; --muted:#6b7280; --ink:#1f2937; --brand:#667eea; --line:#e5e7eb;
     }
     *{box-sizing:border-box}
     html,body{height:100%}
     body{
-      margin:0; font-family:system-ui,-apple-system,Segoe UI,Roboto,Ubuntu,Cantarell,"Helvetica Neue",Arial,"Noto Sans",sans-serif;
-      background:var(--bg); color:var(--ink);
+      margin:0; font-family:system-ui,-apple-system,'Segoe UI',Roboto,Ubuntu,Cantarell,"Helvetica Neue",Arial,"Noto Sans",sans-serif;
+      background:linear-gradient(135deg,#667eea 0%,#764ba2 100%); color:var(--ink);
       display:flex; align-items:flex-start; justify-content:center; padding:24px;
     }
-    .wrap{width:min(960px,100%); }
-    h1{margin:0 0 16px 0; font-size:clamp(22px,3.5vw,36px); font-weight:800}
+    .wrap{width:min(720px,100%); }
+    h1{margin:0 0 20px 0; font-size:clamp(24px,4vw,40px); font-weight:800; color:#fff; text-shadow:0 2px 12px rgba(0,0,0,.2)}
     .card{
-      background:var(--card); border:1px solid var(--line); border-radius:14px;
-      box-shadow:0 6px 20px rgba(0,0,0,.06); padding:18px; margin:12px 0;
+      background:var(--card); border:1px solid var(--line); border-radius:16px;
+      box-shadow:0 8px 24px rgba(0,0,0,.12); padding:24px; margin:16px 0;
     }
-    .row{display:flex; align-items:center; gap:16px; margin:10px 0}
-    .label{color:var(--muted); min-width:120px}
-    .value{font-size:2rem; font-weight:800; color:var(--brand); line-height:1}
-    .small{font-size:.9rem; color:var(--muted)}
-    .actions{display:flex; gap:10px; margin-top:10px}
+    .row{display:flex; align-items:center; gap:16px; margin:16px 0}
+    .label{color:var(--muted); min-width:120px; font-weight:600}
+    .value{font-size:2.5rem; font-weight:800; color:var(--brand); line-height:1}
+    .small{font-size:.9rem; color:var(--muted); line-height:1.5}
+    .actions{display:flex; gap:12px; margin-top:16px; flex-wrap:wrap}
     .btn{
-      background:#eef2ff; color:#3730a3; border:1px solid #c7d2fe; padding:8px 12px; border-radius:10px;
+      background:#eef2ff; color:#4338ca; border:1px solid #c7d2fe; padding:10px 16px; border-radius:12px;
       text-decoration:none; font-weight:600; display:inline-flex; align-items:center; gap:8px;
+      transition:all .2s; cursor:pointer;
     }
-    .btn:hover{background:#e0e7ff}
+    .btn:hover{background:#e0e7ff; transform:translateY(-2px); box-shadow:0 4px 12px rgba(79,70,229,.2)}
     .badge{
-      display:inline-flex; gap:8px; align-items:center; padding:8px 10px; border:1px solid var(--line);
-      border-radius:12px; background:#fff; font-weight:600; margin:6px 0;
+      display:inline-flex; gap:8px; align-items:center; padding:10px 12px; border:1px solid var(--line);
+      border-radius:12px; background:#f8fafc; font-weight:600; margin:8px 0; font-size:.9rem;
     }
-    .mono{font-family: ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,"Liberation Mono","Courier New",monospace;}
+    .mono{font-family:ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,"Liberation Mono","Courier New",monospace; background:#f1f5f9; padding:2px 6px; border-radius:4px}
+    .icon{width:20px; height:20px; display:inline-block}
+    
+    @media (max-width:640px){
+      body{padding:16px}
+      h1{font-size:1.75rem; margin-bottom:16px}
+      .card{padding:18px}
+      .row{gap:12px; margin:12px 0}
+      .label{min-width:100px; font-size:.9rem}
+      .value{font-size:2rem}
+      .actions{gap:8px}
+      .btn{padding:8px 12px; font-size:.9rem}
+    }
   </style>
 </head>
 <body>
   <div class="wrap">
-    <h1>Статистика відвідувань</h1>
+    <h1>📊 Статистика відвідувань</h1>
 
     <div class="card">
       <div class="row">
-        <div class="label">Загалом</div>
+        <div class="label">Загалом:</div>
         <div id="total" class="value">—</div>
       </div>
       <div class="row">
-        <div class="label">Сьогодні</div>
+        <div class="label">Сьогодні:</div>
         <div id="today" class="value">—</div>
       </div>
 
       <div class="badge">
+        <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/>
+        </svg>
         Джерело даних: <span class="mono">hits.sh</span>
       </div>
 
       <div class="actions">
-        <a id="openPage" class="btn" target="_blank" rel="noopener">Відкрити розклад</a>
-        <a id="openJson" class="btn" target="_blank" rel="noopener">Подивитися JSON</a>
+        <a href="https://nikkita100710.github.io/gh-pages/RozkladMK01.html" class="btn" target="_blank" rel="noopener">
+          <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/>
+            <polyline points="9 22 9 12 15 12 15 22"/>
+          </svg>
+          Відкрити сторінку розкладу
+        </a>
+        <a id="openJson" class="btn" target="_blank" rel="noopener">
+          <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+            <polyline points="14 2 14 8 20 8"/>
+          </svg>
+          Подивитися JSON
+        </a>
       </div>
 
-      <div class="small" style="margin-top:8px">
-        Підрахунок виконується без персональних даних. Якщо бачите нулі — перевірте,
-        що шлях сторінки в hits.sh збігається з фактичним URL (без <span class="mono">https://</span>).
+      <div class="small" style="margin-top:16px">
+        Підрахунок виконується без персональних даних через сервіс <span class="mono">hits.sh</span>. 
+        Якщо бачите нулі або тире — перевірте правильність шляху до сторінки або спробуйте оновити через хвилину.
       </div>
     </div>
   </div>
 
   <script>
     (async () => {
-      // Показуємо статистику саме для RozkladMK01.html
       const schedulePath = 'nikkita100710.github.io/gh-pages/RozkladMK01.html';
-
-      // Кнопки
-      document.getElementById('openPage').href = 'https://' + schedulePath;
-      document.getElementById('openPage').textContent = 'Відкрити ' + schedulePath.split('/').pop();
+      
       document.getElementById('openJson').href = 'https://hits.sh/' + encodeURIComponent(schedulePath) + '.json';
 
-      // Тягнемо JSON
       try {
         const res = await fetch('https://hits.sh/' + encodeURIComponent(schedulePath) + '.json', { cache: 'no-store' });
-        const data = await res.json(); // { hits, hits_today, ... }
+        const data = await res.json();
+        
         document.getElementById('total').textContent  = (data && typeof data.hits === 'number') ? data.hits : 0;
         document.getElementById('today').textContent  = (data && typeof data.hits_today === 'number') ? data.hits_today : 0;
-        console.log('[stats] hits.sh data:', data);
+        
+        console.log('[stats] Дані з hits.sh:', data);
       } catch (e) {
-        console.error('[stats] hits.sh error:', e);
+        console.error('[stats] Помилка завантаження даних:', e);
         document.getElementById('total').textContent = '—';
         document.getElementById('today').textContent = '—';
       }
