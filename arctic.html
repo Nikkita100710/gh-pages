@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Arctic Rescue — прототип</title>
+
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      background: #0b1b33;
+      color: #fff;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: flex-start;
+      min-height: 100vh;
+      padding: 10px;
+    }
+
+    h1 {
+      font-size: 20px;
+      margin-bottom: 10px;
+      text-align: center;
+    }
+
+    #game-container {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 10px;
+      max-width: 100%;
+    }
+
+    /* Само поле игры */
+    #gameCanvas {
+      background: #001f3f;
+      border: 2px solid #fff;
+      border-radius: 8px;
+      max-width: 100%;
+      height: auto;
+      touch-action: none; /* чтобы тапы не скроллили страницу */
+    }
+
+    /* Блок с кругом управления */
+    #controls {
+      margin-top: 10px;
+      display: grid;
+      grid-template-columns: 60px 60px 60px;
+      grid-template-rows: 60px 60px 60px;
+      gap: 5px;
+      justify-content: center;
+      align-items: center;
+      touch-action: manipulation;
+    }
+
+    .ctrl-btn {
+      width: 60px;
+      height: 60px;
+      border-radius: 50%;
+      border: 1px solid #fff;
+      background: #123;
+      color: #fff;
+      font-size: 20px;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      cursor: pointer;
+      user-select: none;
+    }
+
+    .ctrl-btn:active {
+      background: #345;
+    }
+
+    /* Позиционируем стрелки как на крестовине */
+    #btn-up {
+      grid-column: 2 / 3;
+      grid-row: 1 / 2;
+    }
+    #btn-left {
+      grid-column: 1 / 2;
+      grid-row: 2 / 3;
+    }
+    #btn-right {
+      grid-column: 3 / 4;
+      grid-row: 2 / 3;
+    }
+    #btn-down {
+      grid-column: 2 / 3;
+      grid-row: 3 / 4;
+    }
+
+    #info {
+      margin-top: 10px;
+      font-size: 14px;
+      text-align: center;
+      opacity: 0.8;
+    }
+  </style>
+</head>
+<body>
+  <h1>Arctic Rescue — прототип поля</h1>
+
+  <div id="game-container">
+    <!-- Поле игры -->
+    <canvas id="gameCanvas" width="600" height="600"></canvas>
+
+    <!-- Круг управления для телефона -->
+    <div id="controls">
+      <button id="btn-up" class="ctrl-btn">▲</button>
+      <button id="btn-left" class="ctrl-btn">◀</button>
+      <button id="btn-right" class="ctrl-btn">▶</button>
+      <button id="btn-down" class="ctrl-btn">▼</button>
+    </div>
+
+    <div id="info">
+      Управление: стрелки на клавиатуре (ПК) или кнопки ниже (телефон).<br />
+      Пока что это одиночный прототип для проверки движения кораблика.
+    </div>
+  </div>
+
+  <!-- Подключаем наш скрипт -->
+  <script src="script.js"></script>
+</body>
+</html>
