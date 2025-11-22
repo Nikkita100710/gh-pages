@@ -38,17 +38,17 @@
       max-width: 100%;
     }
 
-    /* Само поле игры */
+    /* Поле игры */
     #gameCanvas {
       background: #001f3f;
       border: 2px solid #fff;
       border-radius: 8px;
       max-width: 100%;
       height: auto;
-      touch-action: none; /* чтобы тапы не скроллили страницу */
+      touch-action: none;
     }
 
-    /* Блок с кругом управления */
+    /* Круг управления */
     #controls {
       margin-top: 10px;
       display: grid;
@@ -79,23 +79,10 @@
       background: #345;
     }
 
-    /* Позиционируем стрелки как на крестовине */
-    #btn-up {
-      grid-column: 2 / 3;
-      grid-row: 1 / 2;
-    }
-    #btn-left {
-      grid-column: 1 / 2;
-      grid-row: 2 / 3;
-    }
-    #btn-right {
-      grid-column: 3 / 4;
-      grid-row: 2 / 3;
-    }
-    #btn-down {
-      grid-column: 2 / 3;
-      grid-row: 3 / 4;
-    }
+    #btn-up   { grid-column: 2 / 3; grid-row: 1 / 2; }
+    #btn-left { grid-column: 1 / 2; grid-row: 2 / 3; }
+    #btn-right{ grid-column: 3 / 4; grid-row: 2 / 3; }
+    #btn-down { grid-column: 2 / 3; grid-row: 3 / 4; }
 
     #info {
       margin-top: 10px;
@@ -109,10 +96,8 @@
   <h1>Arctic Rescue — прототип поля</h1>
 
   <div id="game-container">
-    <!-- Поле игры -->
     <canvas id="gameCanvas" width="600" height="600"></canvas>
 
-    <!-- Круг управления для телефона -->
     <div id="controls">
       <button id="btn-up" class="ctrl-btn">▲</button>
       <button id="btn-left" class="ctrl-btn">◀</button>
@@ -121,12 +106,4 @@
     </div>
 
     <div id="info">
-      Управление: стрелки на клавиатуре (ПК) или кнопки ниже (телефон).<br />
-      Пока что это одиночный прототип для проверки движения кораблика.
-    </div>
-  </div>
-
-  <!-- Подключаем наш скрипт -->
-  <script src="ARTIC.js"></script>
-</body>
-</html>
+      Управление: стрелки / WASD на клавиатур
