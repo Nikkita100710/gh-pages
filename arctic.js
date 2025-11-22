@@ -169,4 +169,9 @@ window.addEventListener("DOMContentLoaded", () => {
   if (btnUp && btnDown && btnLeft && btnRight) {
     btnUp.addEventListener("click", () => movePlayer(0, -1));
     btnDown.addEventListener("click", () => movePlayer(0, 1));
-    btnLeft.addE
+    btnLeft.addEventListener("click", () => movePlayer(-1, 0));
+    btnRight.addEventListener("click", () => movePlayer(1, 0));
+  }
+
+  draw();
+});
