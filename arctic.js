@@ -18,6 +18,16 @@ window.addEventListener("DOMContentLoaded", () => {
     return;
   }
 
+  // ---- ЗАГРУЗКА КАРТИНКИ КОРАБЛЯ ----
+  const boatImage = new Image();
+  let boatImageLoaded = false;
+  // Путь к файлу лодки. Файл нужно положить рядом с arctic.html и назвать boat.png
+  boatImage.src = "boat.png";
+  boatImage.onload = () => {
+    boatImageLoaded = true;
+    console.log("boat.png загружен");
+  };
+
   // ----- ПАРАМЕТРЫ СЕТКИ -----
   const GRID_COLS = 10;
   const GRID_ROWS = 12; // 1 ряд полюс, 10 воды, 1 континент
@@ -39,13 +49,12 @@ window.addEventListener("DOMContentLoaded", () => {
   let facingDy = -1;
 
   // ----- АЙСБЕРГИ -----
-  const ICEBERG_MOVE_DELAY = 500;   // мс между шагами айсбергов
-  const ICEBERG_SPAWN_DELAY = 1200; // мс между попытками спавна нового айсберга
-  const ICEBERG_MAX_COUNT = 10;     // максимум айсбергов одновременно
+  const ICEBERG_MOVE_DELAY = 500;
+  const ICEBERG_SPAWN_DELAY = 1200;
+  const ICEBERG_MAX_COUNT = 10;
 
-  // айсберги будут только в рядах 2..9 (вода между парковочными рядами 1 и 10)
   const ICEBERG_MIN_ROW = 2;
-  const ICEBERG_MAX_ROW = GRID_ROWS - 3; // 12 - 3 = 9
+  const ICEBERG_MAX_ROW = GRID_ROWS - 3; // 9
 
   let icebergs = [];
   let lastIcebergMoveTime = 0;
@@ -57,8 +66,8 @@ window.addEventListener("DOMContentLoaded", () => {
     row: GRID_ROWS - 2, // 10-я строка (0..11), над континентом
   };
 
-  let carryingBear = false; // везём медведя или нет
-  let savedBears = 0;       // сколько спасли
+  let carryingBear = false;
+  let savedBears = 0;
 
   // ----- ТАЙМЕР РАУНДА -----
   const ROUND_DURATION_MS = 60_000; // 1 минута
@@ -69,7 +78,7 @@ window.addEventListener("DOMContentLoaded", () => {
     player.col = Math.floor(GRID_COLS / 2);
     player.row = GRID_ROWS - 2;
     facingDx = 0;
-    facingDy = -1; // по умолчанию смотрим вверх
+    facingDy = -1;
   }
 
   // ----- УНИВЕРСАЛЬНЫЙ РИСОВАЛЬЩИК ГОЛОВЫ МЕДВЕДЯ -----
@@ -116,16 +125,13 @@ window.addEventListener("DOMContentLoaded", () => {
   function draw() {
     const now = Date.now();
 
-    // Обновляем таймер и, при необходимости, останавливаем игру
     updateTimer(now);
 
-    // Обновляем движение, если игра ещё идёт
     if (!gameOver) {
       handleMovement(now);
       handleIcebergs(now);
     }
 
-    // Очищаем кадр
     ctx.clearRect(0, 0, canvas.width, canvas.height);
 
     // Океан с лёгким градиентом
@@ -135,16 +141,11 @@ window.addEventListener("DOMContentLoaded", () => {
     ctx.fillStyle = oceanGradient;
     ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-    // Северный полюс (верхняя полоса)
+    // Северный полюс
     ctx.fillStyle = "#e0f7ff";
-    ctx.fillRect(
-      0,
-      0,
-      canvas.width,
-      northPoleRows * cellHeight
-    );
+    ctx.fillRect(0, 0, canvas.width, northPoleRows * cellHeight);
 
-    // Континент (нижняя полоса)
+    // Континент
     ctx.fillStyle = "#145a32";
     ctx.fillRect(
       0,
@@ -153,28 +154,14 @@ window.addEventListener("DOMContentLoaded", () => {
       continentRows * cellHeight
     );
 
-    // Надписи "Северный полюс" и "Континент"
     drawPoleLabels();
-
-    // Белые медведи на полюсе
     drawPolarBears();
-
-    // Сетка
     drawGrid();
-
-    // Айсберги
     drawIcebergs();
-
-    // Корабль
     drawPlayer();
-
-    // Счётчик спасённых
     drawScore();
-
-    // Таймер
     drawTimer(now);
 
-    // Оверлей "Время вышло!"
     if (gameOver) {
       drawGameOverOverlay();
     }
@@ -206,18 +193,13 @@ window.addEventListener("DOMContentLoaded", () => {
     ctx.font = "16px Segoe UI";
     ctx.textAlign = "center";
     ctx.textBaseline = "middle";
-    ctx.fillText(
-      "Континент",
-      canvas.width / 2,
-      continentTextY
-    );
+    ctx.fillText("Континент", canvas.width / 2, continentTextY);
   }
 
   function drawGrid() {
     ctx.strokeStyle = "rgba(255,255,255,0.2)";
     ctx.lineWidth = 1;
 
-    // Вертикальные линии
     for (let c = 0; c <= GRID_COLS; c++) {
       const x = c * cellWidth;
       ctx.beginPath();
@@ -226,7 +208,6 @@ window.addEventListener("DOMContentLoaded", () => {
       ctx.stroke();
     }
 
-    // Горизонтальные линии
     for (let r = 0; r <= GRID_ROWS; r++) {
       const y = r * cellHeight;
       ctx.beginPath();
@@ -252,11 +233,11 @@ window.addEventListener("DOMContentLoaded", () => {
     const xCenter = player.col * cellWidth + cellWidth / 2;
     const yCenter = player.row * cellHeight + cellHeight / 2;
 
-    const hullWidth = cellWidth * 0.7;
+    // Нужен только для подписи
     const hullHeight = cellHeight * 0.5;
 
-    // Определяем угол поворота по направлению
-    let angle = 0; // нос вверх
+    // Угол поворота
+    let angle = 0; // вверх
     if (facingDx === 1 && facingDy === 0) {
       angle = Math.PI / 2;         // вправо
     } else if (facingDx === 0 && facingDy === 1) {
@@ -266,73 +247,69 @@ window.addEventListener("DOMContentLoaded", () => {
     }
 
     ctx.save();
-
-    // Переносим систему координат в центр корабля и поворачиваем
     ctx.translate(xCenter, yCenter);
     ctx.rotate(angle);
 
-    const bottomY = hullHeight / 2;
-    const topY = -hullHeight / 2;
-    const leftX = -hullWidth / 2;
-    const rightX = hullWidth / 2;
+    if (boatImageLoaded) {
+      // Масштабируем лодку под клетку
+      const maxBoatWidth = cellWidth * 0.9;
+      const maxBoatHeight = cellHeight * 0.9;
 
-    // Корпус (ледокол)
-    ctx.fillStyle = "#ffd447";
-    ctx.strokeStyle = "#b8860b";
-    ctx.lineWidth = 2;
+      const imgW = boatImage.width;
+      const imgH = boatImage.height;
+      const imgAspect = imgW / imgH;
 
-    ctx.beginPath();
-    // Нос вверх (центр)
-    ctx.moveTo(0, topY - hullHeight * 0.35);
-    // Левый верх борта
-    ctx.lineTo(leftX + hullWidth * 0.2, topY);
-    // Левый низ
-    ctx.lineTo(leftX, bottomY);
-    // Правый низ
-    ctx.lineTo(rightX, bottomY);
-    // Правый верх борта
-    ctx.lineTo(rightX - hullWidth * 0.2, topY);
-    ctx.closePath();
-    ctx.fill();
-    ctx.stroke();
+      let drawW = maxBoatWidth;
+      let drawH = drawW / imgAspect;
 
-    // Рубка
-    const cabinWidth = hullWidth * 0.35;
-    const cabinHeight = hullHeight * 0.4;
-    const cabinX = -cabinWidth / 2;
-    const cabinY = topY + hullHeight * 0.1;
+      if (drawH > maxBoatHeight) {
+        drawH = maxBoatHeight;
+        drawW = drawH * imgAspect;
+      }
 
-    ctx.fillStyle = "#ffffff";
-    ctx.beginPath();
-    if (ctx.roundRect) {
-      ctx.roundRect(cabinX, cabinY, cabinWidth, cabinHeight, 4);
+      ctx.drawImage(boatImage, -drawW / 2, -drawH / 2, drawW, drawH);
+
+      // Медведь на носу
+      if (carryingBear) {
+        const bearRadius = Math.min(cellWidth, cellHeight) * 0.16;
+        const bearX = 0;
+        const bearY = -drawH / 2 + drawH * 0.25;
+        drawBearHead(bearX, bearY, bearRadius);
+      }
     } else {
-      ctx.rect(cabinX, cabinY, cabinWidth, cabinHeight);
-    }
-    ctx.fill();
-    ctx.stroke();
+      // Фолбэк: простой треугольный кораблик
+      const hullWidth = cellWidth * 0.7;
+      const simpleHullHeight = cellHeight * 0.5;
+      const bottomY = simpleHullHeight / 2;
+      const topY = -simpleHullHeight / 2;
+      const leftX = -hullWidth / 2;
+      const rightX = hullWidth / 2;
 
-    // Окна рубки
-    ctx.fillStyle = "#2b5c99";
-    const windowRadius = cabinWidth * 0.08;
-    const winY = cabinY + cabinHeight * 0.4;
-    ctx.beginPath();
-    ctx.arc(cabinX + cabinWidth * 0.25, winY, windowRadius, 0, Math.PI * 2);
-    ctx.arc(cabinX + cabinWidth * 0.5,  winY, windowRadius, 0, Math.PI * 2);
-    ctx.arc(cabinX + cabinWidth * 0.75, winY, windowRadius, 0, Math.PI * 2);
-    ctx.fill();
+      ctx.fillStyle = "#ffd447";
+      ctx.strokeStyle = "#b8860b";
+      ctx.lineWidth = 2;
 
-    // Медведь на палубе (если везём)
-    if (carryingBear) {
-      const bearRadius = Math.min(cellWidth, cellHeight) * 0.16;
-      const bearX = 0;
-      const bearY = topY - hullHeight * 0.05;
-      drawBearHead(bearX, bearY, bearRadius);
+      ctx.beginPath();
+      ctx.moveTo(0, topY - simpleHullHeight * 0.35);
+      ctx.lineTo(leftX + hullWidth * 0.2, topY);
+      ctx.lineTo(leftX, bottomY);
+      ctx.lineTo(rightX, bottomY);
+      ctx.lineTo(rightX - hullWidth * 0.2, topY);
+      ctx.closePath();
+      ctx.fill();
+      ctx.stroke();
+
+      if (carryingBear) {
+        const bearRadius = Math.min(cellWidth, cellHeight) * 0.16;
+        const bearX = 0;
+        const bearY = topY - simpleHullHeight * 0.05;
+        drawBearHead(bearX, bearY, bearRadius);
+      }
     }
 
     ctx.restore();
 
-    // Подпись "Player" (не вращаем)
+    // Подпись "Player"
     ctx.fillStyle = "#ffffff";
     ctx.font = "12px Segoe UI";
     ctx.textAlign = "center";
@@ -477,10 +454,9 @@ window.addEventListener("DOMContentLoaded", () => {
       canvas.width / 2,
       canvas.height / 2 + 20
     );
-    // Перезапуск пока через F5
   }
 
-  // ----- ЛОГИКА ПОЛЮС / КОНТИНЕНТ -----
+  // ----- ПОЛЮС / КОНТИНЕНТ -----
   function handleReachNorthPole() {
     if (!carryingBear) {
       carryingBear = true;
@@ -496,24 +472,20 @@ window.addEventListener("DOMContentLoaded", () => {
     }
   }
 
-  // ----- ДВИЖЕНИЕ КОРАБЛЯ ПО КЛЕТКАМ -----
+  // ----- ДВИЖЕНИЕ КОРАБЛЯ -----
   function movePlayer(dx, dy) {
-    // Горизонталь
     const newCol = player.col + dx;
     if (newCol >= 0 && newCol < GRID_COLS) {
       player.col = newCol;
     }
 
-    // Вертикаль
     if (dy < 0) {
-      // вверх
       if (player.row > 1) {
         player.row -= 1;
       } else if (player.row === 1) {
         handleReachNorthPole();
       }
     } else if (dy > 0) {
-      // вниз
       if (player.row < GRID_ROWS - 2) {
         player.row += 1;
       } else if (player.row === GRID_ROWS - 2) {
@@ -530,7 +502,7 @@ window.addEventListener("DOMContentLoaded", () => {
     lastMoveTime = now;
   }
 
-  // ----- АЙСБЕРГИ: ДВИЖЕНИЕ, СПАВН, СТОЛКНОВЕНИЯ -----
+  // ----- АЙСБЕРГИ -----
   function handleIcebergs(now) {
     if (now - lastIcebergMoveTime >= ICEBERG_MOVE_DELAY) {
       moveIcebergs();
@@ -637,7 +609,7 @@ window.addEventListener("DOMContentLoaded", () => {
     ].includes(key);
   }
 
-  // Клавиатура (ПК)
+  // Клавиатура
   window.addEventListener("keydown", (e) => {
     setDirectionFromKey(e.key);
   });
@@ -648,7 +620,7 @@ window.addEventListener("DOMContentLoaded", () => {
     }
   });
 
-  // Кнопки на экране (телефон/ПК)
+  // Кнопки на экране
   const btnUp = document.getElementById("btn-up");
   const btnDown = document.getElementById("btn-down");
   const btnLeft = document.getElementById("btn-left");
