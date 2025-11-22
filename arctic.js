@@ -4,41 +4,39 @@ window.addEventListener("DOMContentLoaded", () => {
   const canvas = document.getElementById("gameCanvas");
   const ctx = canvas.getContext("2d");
 
+  if (!canvas || !ctx) {
+    console.error("Не найден canvas с id='gameCanvas' или контекст рисования.");
+    return;
+  }
+
   // Размер сетки
   const GRID_COLS = 10;
   const GRID_ROWS = 10;
 
-  // Размер одной клетки
+  // Размер клетки
   const cellWidth = canvas.width / GRID_COLS;
   const cellHeight = canvas.height / GRID_ROWS;
 
   // Игрок / кораблик
   const player = {
-    col: Math.floor(GRID_COLS / 2), // колонка (по X)
-    row: GRID_ROWS - 1,             // строка (по Y), нижняя строка
+    col: Math.floor(GRID_COLS / 2),
+    row: GRID_ROWS - 1, // нижняя строка
   };
 
-  // Фоновые зоны: северный полюс (верхняя полоса) и континент (нижняя полоса)
+  // Зоны
   const northPoleRows = 1; // 1 строка сверху
   const continentRows = 1; // 1 строка снизу
 
-  // Основной цикл отрисовки
   function draw() {
-    // Очистка
     ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-    // Рисуем фон океана
+    // Океан
     ctx.fillStyle = "#003366";
     ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-    // Северный полюс (белая полоса сверху)
+    // Северный полюс
     ctx.fillStyle = "#e0f7ff";
-    ctx.fillRect(
-      0,
-      0,
-      canvas.width,
-      northPoleRows * cellHeight
-    );
+    ctx.fillRect(0, 0, canvas.width, northPoleRows * cellHeight);
     ctx.fillStyle = "#003366";
     ctx.font = "16px Segoe UI";
     ctx.textAlign = "center";
@@ -49,7 +47,7 @@ window.addEventListener("DOMContentLoaded", () => {
       (northPoleRows * cellHeight) / 2
     );
 
-    // Континент (полоса снизу)
+    // Континент
     ctx.fillStyle = "#145a32";
     ctx.fillRect(
       0,
@@ -67,13 +65,12 @@ window.addEventListener("DOMContentLoaded", () => {
       canvas.height - (continentRows * cellHeight) / 2
     );
 
-    // Рисуем сетку
+    // Сетка
     drawGrid();
 
-    // Рисуем кораблик
+    // Кораблик
     drawPlayer();
 
-    // В дальнейшем тут будет отрисовка айсбергов, других игроков, таймера и т.д.
     requestAnimationFrame(draw);
   }
 
@@ -81,7 +78,6 @@ window.addEventListener("DOMContentLoaded", () => {
     ctx.strokeStyle = "rgba(255,255,255,0.2)";
     ctx.lineWidth = 1;
 
-    // Вертикальные линии
     for (let c = 0; c <= GRID_COLS; c++) {
       const x = c * cellWidth;
       ctx.beginPath();
@@ -90,7 +86,6 @@ window.addEventListener("DOMContentLoaded", () => {
       ctx.stroke();
     }
 
-    // Горизонтальные линии
     for (let r = 0; r <= GRID_ROWS; r++) {
       const y = r * cellHeight;
       ctx.beginPath();
@@ -104,22 +99,17 @@ window.addEventListener("DOMContentLoaded", () => {
     const xCenter = player.col * cellWidth + cellWidth / 2;
     const yCenter = player.row * cellHeight + cellHeight / 2;
 
-    // Рисуем кораблик как маленький треугольник-нос вверх
     const shipWidth = cellWidth * 0.6;
     const shipHeight = cellHeight * 0.6;
 
     ctx.fillStyle = "#ffcc00";
     ctx.beginPath();
-    // Нос корабля (вверх)
-    ctx.moveTo(xCenter, yCenter - shipHeight / 2);
-    // Левый нижний угол
-    ctx.lineTo(xCenter - shipWidth / 2, yCenter + shipHeight / 2);
-    // Правый нижний угол
-    ctx.lineTo(xCenter + shipWidth / 2, yCenter + shipHeight / 2);
+    ctx.moveTo(xCenter, yCenter - shipHeight / 2);                // нос
+    ctx.lineTo(xCenter - shipWidth / 2, yCenter + shipHeight / 2); // левый низ
+    ctx.lineTo(xCenter + shipWidth / 2, yCenter + shipHeight / 2); // правый низ
     ctx.closePath();
     ctx.fill();
 
-    // Подпись кораблика (пока фиксированная)
     ctx.fillStyle = "#ffffff";
     ctx.font = "12px Segoe UI";
     ctx.textAlign = "center";
@@ -127,7 +117,6 @@ window.addEventListener("DOMContentLoaded", () => {
     ctx.fillText("Player", xCenter, yCenter - shipHeight / 2 - 2);
   }
 
-  // Движение корабля с ограничением по границам поля
   function movePlayer(dx, dy) {
     const newCol = player.col + dx;
     const newRow = player.row + dy;
@@ -140,38 +129,44 @@ window.addEventListener("DOMContentLoaded", () => {
     }
   }
 
-  // Управление с клавиатуры (ПК)
+  // Клавиатура (стрелки + WASD)
   window.addEventListener("keydown", (e) => {
-    switch (e.key) {
+    const key = e.key;
+
+    switch (key) {
       case "ArrowUp":
+      case "w":
+      case "W":
         movePlayer(0, -1);
         break;
+
       case "ArrowDown":
+      case "s":
+      case "S":
         movePlayer(0, 1);
         break;
+
       case "ArrowLeft":
+      case "a":
+      case "A":
         movePlayer(-1, 0);
         break;
+
       case "ArrowRight":
+      case "d":
+      case "D":
         movePlayer(1, 0);
         break;
     }
   });
 
-  // Управление с кнопок (телефон / мышь)
-  document.getElementById("btn-up").addEventListener("click", () => {
-    movePlayer(0, -1);
-  });
-  document.getElementById("btn-down").addEventListener("click", () => {
-    movePlayer(0, 1);
-  });
-  document.getElementById("btn-left").addEventListener("click", () => {
-    movePlayer(-1, 0);
-  });
-  document.getElementById("btn-right").addEventListener("click", () => {
-    movePlayer(1, 0);
-  });
+  // Кнопки на экране
+  const btnUp = document.getElementById("btn-up");
+  const btnDown = document.getElementById("btn-down");
+  const btnLeft = document.getElementById("btn-left");
+  const btnRight = document.getElementById("btn-right");
 
-  // Запуск отрисовки
-  draw();
-});
+  if (btnUp && btnDown && btnLeft && btnRight) {
+    btnUp.addEventListener("click", () => movePlayer(0, -1));
+    btnDown.addEventListener("click", () => movePlayer(0, 1));
+    btnLeft.addE
