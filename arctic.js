@@ -34,6 +34,10 @@ window.addEventListener("DOMContentLoaded", () => {
   let desiredDx = 0; // -1, 0, 1
   let desiredDy = 0; // -1, 0, 1
 
+  // Направление, в которое "смотрит" корабль (по умолчанию вверх)
+  let facingDx = 0;
+  let facingDy = -1;
+
   // ----- АЙСБЕРГИ -----
   const ICEBERG_MOVE_DELAY = 500;   // мс между шагами айсбергов
   const ICEBERG_SPAWN_DELAY = 1200; // мс между попытками спавна нового айсберга
@@ -64,6 +68,8 @@ window.addEventListener("DOMContentLoaded", () => {
   function resetPlayerPosition() {
     player.col = Math.floor(GRID_COLS / 2);
     player.row = GRID_ROWS - 2;
+    facingDx = 0;
+    facingDy = -1; // по умолчанию смотрим вверх
   }
 
   // ----- УНИВЕРСАЛЬНЫЙ РИСОВАЛЬЩИК ГОЛОВЫ МЕДВЕДЯ -----
@@ -113,13 +119,13 @@ window.addEventListener("DOMContentLoaded", () => {
     // Обновляем таймер и, при необходимости, останавливаем игру
     updateTimer(now);
 
-    // Сначала обрабатываем движение корабля и айсбергов (если раунд ещё идёт)
+    // Обновляем движение, если игра ещё идёт
     if (!gameOver) {
       handleMovement(now);
       handleIcebergs(now);
     }
 
-    // Потом рисуем всё
+    // Очищаем кадр
     ctx.clearRect(0, 0, canvas.width, canvas.height);
 
     // Океан с лёгким градиентом
@@ -129,7 +135,7 @@ window.addEventListener("DOMContentLoaded", () => {
     ctx.fillStyle = oceanGradient;
     ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-    // Северный полюс (верхняя полоса, ряд 0)
+    // Северный полюс (верхняя полоса)
     ctx.fillStyle = "#e0f7ff";
     ctx.fillRect(
       0,
@@ -138,7 +144,7 @@ window.addEventListener("DOMContentLoaded", () => {
       northPoleRows * cellHeight
     );
 
-    // Континент (нижняя полоса, ряд 11)
+    // Континент (нижняя полоса)
     ctx.fillStyle = "#145a32";
     ctx.fillRect(
       0,
@@ -150,7 +156,7 @@ window.addEventListener("DOMContentLoaded", () => {
     // Надписи "Северный полюс" и "Континент"
     drawPoleLabels();
 
-    // Белые медведи на полюсе (декоративные)
+    // Белые медведи на полюсе
     drawPolarBears();
 
     // Сетка
@@ -159,16 +165,16 @@ window.addEventListener("DOMContentLoaded", () => {
     // Айсберги
     drawIcebergs();
 
-    // Кораблик (с медведем или без)
+    // Корабль
     drawPlayer();
 
-    // Счётчик спасённых медведей (на континенте)
+    // Счётчик спасённых
     drawScore();
 
-    // Таймер в углу
+    // Таймер
     drawTimer(now);
 
-    // Сообщение "Время вышло!" поверх, если игра закончена
+    // Оверлей "Время вышло!"
     if (gameOver) {
       drawGameOverOverlay();
     }
@@ -177,10 +183,10 @@ window.addEventListener("DOMContentLoaded", () => {
   }
 
   function drawPoleLabels() {
-    // Северный полюс: текст чуть выше центра полосы
     const northHeight = northPoleRows * cellHeight;
     const northTextY = northHeight * 0.3;
 
+    // Северный полюс
     ctx.fillStyle = "#003366";
     ctx.font = "16px Segoe UI";
     ctx.textAlign = "center";
@@ -191,7 +197,7 @@ window.addEventListener("DOMContentLoaded", () => {
       northTextY
     );
 
-    // Континент: надпись "Континент" в верхней части зелёной полосы
+    // Континент
     const bandTop = canvas.height - continentRows * cellHeight;
     const bandHeight = continentRows * cellHeight;
     const continentTextY = bandTop + bandHeight * 0.3;
@@ -233,7 +239,6 @@ window.addEventListener("DOMContentLoaded", () => {
   function drawPolarBears() {
     const bearsToDraw = 5;
     const northHeight = northPoleRows * cellHeight;
-    // Чуть ниже текста, ближе к нижней границе полосы
     const y = northHeight * 0.7;
     const bodyRadius = cellHeight * 0.18;
 
@@ -250,21 +255,35 @@ window.addEventListener("DOMContentLoaded", () => {
     const hullWidth = cellWidth * 0.7;
     const hullHeight = cellHeight * 0.5;
 
+    // Определяем угол поворота по направлению
+    let angle = 0; // нос вверх
+    if (facingDx === 1 && facingDy === 0) {
+      angle = Math.PI / 2;         // вправо
+    } else if (facingDx === 0 && facingDy === 1) {
+      angle = Math.PI;             // вниз
+    } else if (facingDx === -1 && facingDy === 0) {
+      angle = -Math.PI / 2;        // влево
+    }
+
     ctx.save();
 
-    // Корпус корабля (трапеция с носом вверх)
+    // Переносим систему координат в центр корабля и поворачиваем
+    ctx.translate(xCenter, yCenter);
+    ctx.rotate(angle);
+
+    const bottomY = hullHeight / 2;
+    const topY = -hullHeight / 2;
+    const leftX = -hullWidth / 2;
+    const rightX = hullWidth / 2;
+
+    // Корпус (ледокол)
     ctx.fillStyle = "#ffd447";
     ctx.strokeStyle = "#b8860b";
     ctx.lineWidth = 2;
 
     ctx.beginPath();
-    const bottomY = yCenter + hullHeight / 2;
-    const topY = yCenter - hullHeight / 2;
-    const leftX = xCenter - hullWidth / 2;
-    const rightX = xCenter + hullWidth / 2;
-
     // Нос вверх (центр)
-    ctx.moveTo(xCenter, topY - hullHeight * 0.35);
+    ctx.moveTo(0, topY - hullHeight * 0.35);
     // Левый верх борта
     ctx.lineTo(leftX + hullWidth * 0.2, topY);
     // Левый низ
@@ -277,15 +296,19 @@ window.addEventListener("DOMContentLoaded", () => {
     ctx.fill();
     ctx.stroke();
 
-    // Рубка (кабина) в середине
+    // Рубка
     const cabinWidth = hullWidth * 0.35;
     const cabinHeight = hullHeight * 0.4;
-    const cabinX = xCenter - cabinWidth / 2;
+    const cabinX = -cabinWidth / 2;
     const cabinY = topY + hullHeight * 0.1;
 
     ctx.fillStyle = "#ffffff";
     ctx.beginPath();
-    ctx.roundRect(cabinX, cabinY, cabinWidth, cabinHeight, 4);
+    if (ctx.roundRect) {
+      ctx.roundRect(cabinX, cabinY, cabinWidth, cabinHeight, 4);
+    } else {
+      ctx.rect(cabinX, cabinY, cabinWidth, cabinHeight);
+    }
     ctx.fill();
     ctx.stroke();
 
@@ -299,17 +322,17 @@ window.addEventListener("DOMContentLoaded", () => {
     ctx.arc(cabinX + cabinWidth * 0.75, winY, windowRadius, 0, Math.PI * 2);
     ctx.fill();
 
-    // Если везём медведя — рисуем голову на палубе перед рубкой
+    // Медведь на палубе (если везём)
     if (carryingBear) {
       const bearRadius = Math.min(cellWidth, cellHeight) * 0.16;
-      const bearX = xCenter;
+      const bearX = 0;
       const bearY = topY - hullHeight * 0.05;
       drawBearHead(bearX, bearY, bearRadius);
     }
 
     ctx.restore();
 
-    // Подпись корабля
+    // Подпись "Player" (не вращаем)
     ctx.fillStyle = "#ffffff";
     ctx.font = "12px Segoe UI";
     ctx.textAlign = "center";
@@ -317,7 +340,6 @@ window.addEventListener("DOMContentLoaded", () => {
     ctx.fillText("Player", xCenter, yCenter + hullHeight / 2 + 14);
   }
 
-  // Айсберги: 3 варианта формы, строго внутри своей клетки
   function drawIcebergs() {
     for (const iceberg of icebergs) {
       const x = iceberg.col * cellWidth;
@@ -372,7 +394,7 @@ window.addEventListener("DOMContentLoaded", () => {
 
       ctx.fill();
 
-      // Лёгкая "тень" под айсбергом (тоже в пределах клетки)
+      // Тень под айсбергом
       ctx.fillStyle = "rgba(0, 0, 0, 0.15)";
       ctx.beginPath();
       ctx.ellipse(
@@ -389,7 +411,6 @@ window.addEventListener("DOMContentLoaded", () => {
   }
 
   function drawScore() {
-    // Пишем "Спасено: N" прямо на континенте, слева внизу зелёной полосы
     const bandTop = canvas.height - continentRows * cellHeight;
     const bandHeight = continentRows * cellHeight;
     const y = bandTop + bandHeight * 0.7;
@@ -402,7 +423,7 @@ window.addEventListener("DOMContentLoaded", () => {
     ctx.fillText(scoreText, 10, y);
   }
 
-  // ----- ТАЙМЕР НА ЭКРАНЕ И ОБНОВЛЕНИЕ РАУНДА -----
+  // ----- ТАЙМЕР И ОКОНЧАНИЕ РАУНДА -----
   function updateTimer(now) {
     if (gameOver) return;
 
@@ -435,7 +456,6 @@ window.addEventListener("DOMContentLoaded", () => {
     ctx.textAlign = "right";
     ctx.textBaseline = "top";
 
-    // В правом верхнем углу, чуть ниже полюса
     const x = canvas.width - 10;
     const y = northPoleRows * cellHeight + 10;
     ctx.fillText(text, x, y);
@@ -460,9 +480,8 @@ window.addEventListener("DOMContentLoaded", () => {
     // Перезапуск пока через F5
   }
 
-  // ----- ЛОГИКА "ДОШЁЛ ДО ПОЛЮСА/КОНТИНЕНТА" -----
+  // ----- ЛОГИКА ПОЛЮС / КОНТИНЕНТ -----
   function handleReachNorthPole() {
-    // Берём медведя на борт, если ещё никого не везём
     if (!carryingBear) {
       carryingBear = true;
       console.log("Медведь взят на борт на Северном полюсе");
@@ -470,7 +489,6 @@ window.addEventListener("DOMContentLoaded", () => {
   }
 
   function handleReachContinent() {
-    // Высаживаем медведя и увеличиваем счётчик
     if (carryingBear) {
       carryingBear = false;
       savedBears += 1;
@@ -478,56 +496,47 @@ window.addEventListener("DOMContentLoaded", () => {
     }
   }
 
-  // ----- ДВИЖЕНИЕ КОРАБЛЯ ПО КЛЕТКАМ (БЕЗ ТАЙМЕРА) -----
+  // ----- ДВИЖЕНИЕ КОРАБЛЯ ПО КЛЕТКАМ -----
   function movePlayer(dx, dy) {
-    // Горизонталь — обычное ограничение 0..GRID_COLS-1
+    // Горизонталь
     const newCol = player.col + dx;
     if (newCol >= 0 && newCol < GRID_COLS) {
       player.col = newCol;
     }
 
-    // Вертикаль — только по воде (ряды 1..GRID_ROWS-2)
+    // Вертикаль
     if (dy < 0) {
-      // Вверх
+      // вверх
       if (player.row > 1) {
         player.row -= 1;
       } else if (player.row === 1) {
-        // Стоим у полюса и пытаемся пойти ещё выше
         handleReachNorthPole();
       }
     } else if (dy > 0) {
-      // Вниз
+      // вниз
       if (player.row < GRID_ROWS - 2) {
         player.row += 1;
       } else if (player.row === GRID_ROWS - 2) {
-        // Стоим у континента и пытаемся пойти ещё ниже
         handleReachContinent();
       }
     }
   }
 
-  // ----- ОГРАНИЧЕНИЕ ПО ВРЕМЕНИ МЕЖДУ ШАГАМИ КОРАБЛЯ -----
   function handleMovement(now) {
-    // Если никуда не хотим двигаться — выходим
     if (desiredDx === 0 && desiredDy === 0) return;
-
-    // Если ещё не прошло MOVE_DELAY мс — выходим
     if (now - lastMoveTime < MOVE_DELAY) return;
 
-    // Делаем шаг
     movePlayer(desiredDx, desiredDy);
     lastMoveTime = now;
   }
 
   // ----- АЙСБЕРГИ: ДВИЖЕНИЕ, СПАВН, СТОЛКНОВЕНИЯ -----
   function handleIcebergs(now) {
-    // Двигаем айсберги
     if (now - lastIcebergMoveTime >= ICEBERG_MOVE_DELAY) {
       moveIcebergs();
       lastIcebergMoveTime = now;
     }
 
-    // Спавним новый айсберг
     if (
       now - lastIcebergSpawnTime >= ICEBERG_SPAWN_DELAY &&
       icebergs.length < ICEBERG_MAX_COUNT
@@ -536,7 +545,6 @@ window.addEventListener("DOMContentLoaded", () => {
       lastIcebergSpawnTime = now;
     }
 
-    // Проверяем столкновение с кораблём
     checkCollisionsWithIcebergs();
   }
 
@@ -544,7 +552,6 @@ window.addEventListener("DOMContentLoaded", () => {
     for (const iceberg of icebergs) {
       iceberg.col += 1;
     }
-    // Убираем айсберги, вышедшие за правый край
     icebergs = icebergs.filter((iceberg) => iceberg.col < GRID_COLS);
   }
 
@@ -553,11 +560,11 @@ window.addEventListener("DOMContentLoaded", () => {
       Math.floor(Math.random() * (ICEBERG_MAX_ROW - ICEBERG_MIN_ROW + 1)) +
       ICEBERG_MIN_ROW;
 
-    const variant = Math.floor(Math.random() * 3); // 0,1,2 — форма айсберга
+    const variant = Math.floor(Math.random() * 3); // 0,1,2
 
     icebergs.push({
       row,
-      col: 0, // начинаем слева
+      col: 0,
       variant,
     });
   }
@@ -573,7 +580,6 @@ window.addEventListener("DOMContentLoaded", () => {
 
   function handleIcebergCollision() {
     console.log("Столкновение с айсбергом! Корабль возвращён на старт.");
-    // Если везли медведя — он не считается спасённым, просто "теряем"
     if (carryingBear) {
       carryingBear = false;
     }
@@ -581,10 +587,15 @@ window.addEventListener("DOMContentLoaded", () => {
     clearDirection();
   }
 
-  // ----- ВСПОМОГАТЕЛЬНЫЕ ФУНКЦИИ УПРАВЛЕНИЯ -----
+  // ----- УПРАВЛЕНИЕ -----
   function setDirection(dx, dy) {
     desiredDx = dx;
     desiredDy = dy;
+
+    if (dx !== 0 || dy !== 0) {
+      facingDx = dx;
+      facingDy = dy;
+    }
   }
 
   function clearDirection() {
@@ -599,25 +610,21 @@ window.addEventListener("DOMContentLoaded", () => {
       case "W":
         setDirection(0, -1);
         break;
-
       case "ArrowDown":
       case "s":
       case "S":
         setDirection(0, 1);
         break;
-
       case "ArrowLeft":
       case "a":
       case "A":
         setDirection(-1, 0);
         break;
-
       case "ArrowRight":
       case "d":
       case "D":
         setDirection(1, 0);
         break;
-
       default:
         break;
     }
@@ -630,7 +637,7 @@ window.addEventListener("DOMContentLoaded", () => {
     ].includes(key);
   }
 
-  // ----- КЛАВИАТУРА (ПК) -----
+  // Клавиатура (ПК)
   window.addEventListener("keydown", (e) => {
     setDirectionFromKey(e.key);
   });
@@ -641,7 +648,7 @@ window.addEventListener("DOMContentLoaded", () => {
     }
   });
 
-  // ----- КНОПКИ НА ЭКРАНЕ (ТЕЛЕФОН / ПК) -----
+  // Кнопки на экране (телефон/ПК)
   const btnUp = document.getElementById("btn-up");
   const btnDown = document.getElementById("btn-down");
   const btnLeft = document.getElementById("btn-left");
@@ -670,6 +677,7 @@ window.addEventListener("DOMContentLoaded", () => {
   attachButtonControls(btnLeft, -1,  0);
   attachButtonControls(btnRight, 1,  0);
 
-  // Старт анимации
+  // Старт
+  resetPlayerPosition();
   draw();
 });
