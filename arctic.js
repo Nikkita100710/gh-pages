@@ -6,6 +6,7 @@
 // Движение корабля: не чаще одного шага каждые MOVE_DELAY мс (200 мс).
 // Айсберги 1x1: ряды 2..9, движутся слева направо, шаг каждые 500 мс.
 // Белые медведи: бесконечный запас на полюсе, счётчик спасённых на континенте.
+// Раунд: 1 минута, по окончании — игра останавливается.
 
 window.addEventListener("DOMContentLoaded", () => {
   const canvas = document.getElementById("gameCanvas");
@@ -54,6 +55,11 @@ window.addEventListener("DOMContentLoaded", () => {
   let carryingBear = false; // везём медведя или нет
   let savedBears = 0;       // сколько спасли
 
+  // ----- ТАЙМЕР РАУНДА -----
+  const ROUND_DURATION_MS = 60_000; // 1 минута
+  let roundStartTime = Date.now();
+  let gameOver = false;
+
   function resetPlayerPosition() {
     player.col = Math.floor(GRID_COLS / 2);
     player.row = GRID_ROWS - 2;
@@ -63,9 +69,14 @@ window.addEventListener("DOMContentLoaded", () => {
   function draw() {
     const now = Date.now();
 
-    // Сначала обрабатываем движение корабля и айсбергов
-    handleMovement(now);
-    handleIcebergs(now);
+    // Обновляем таймер и, при необходимости, останавливаем игру
+    updateTimer(now);
+
+    // Сначала обрабатываем движение корабля и айсбергов (если раунд ещё идёт)
+    if (!gameOver) {
+      handleMovement(now);
+      handleIcebergs(now);
+    }
 
     // Потом рисуем всё
     ctx.clearRect(0, 0, canvas.width, canvas.height);
@@ -92,7 +103,7 @@ window.addEventListener("DOMContentLoaded", () => {
       continentRows * cellHeight
     );
 
-    // Мелкий декор: надписи
+    // Надписи "Северный полюс" и "Континент"
     drawPoleLabels();
 
     // Белые медведи на полюсе (декоративные)
@@ -107,14 +118,25 @@ window.addEventListener("DOMContentLoaded", () => {
     // Кораблик (с медведем или без)
     drawPlayer();
 
-    // Счётчик спасённых медведей
+    // Счётчик спасённых медведей (на континенте)
     drawScore();
+
+    // Таймер в углу
+    drawTimer(now);
+
+    // Сообщение "Время вышло!" поверх, если игра закончена
+    if (gameOver) {
+      drawGameOverOverlay();
+    }
 
     requestAnimationFrame(draw);
   }
 
   function drawPoleLabels() {
-    // Подпись Северного полюса
+    // Северный полюс: текст чуть выше центра полосы
+    const northHeight = northPoleRows * cellHeight;
+    const northTextY = northHeight * 0.3;
+
     ctx.fillStyle = "#003366";
     ctx.font = "16px Segoe UI";
     ctx.textAlign = "center";
@@ -122,18 +144,22 @@ window.addEventListener("DOMContentLoaded", () => {
     ctx.fillText(
       "Северный полюс — белые медведи",
       canvas.width / 2,
-      (northPoleRows * cellHeight) / 2
+      northTextY
     );
 
-    // Подпись континента
+    // Континент: надпись "Континент" в верхней части зелёной полосы
+    const bandTop = canvas.height - continentRows * cellHeight;
+    const bandHeight = continentRows * cellHeight;
+    const continentTextY = bandTop + bandHeight * 0.3;
+
     ctx.fillStyle = "#ffffff";
     ctx.font = "16px Segoe UI";
     ctx.textAlign = "center";
     ctx.textBaseline = "middle";
     ctx.fillText(
-      "Континент: Аляска — Канада",
+      "Континент",
       canvas.width / 2,
-      canvas.height - (continentRows * cellHeight) / 2
+      continentTextY
     );
   }
 
@@ -163,7 +189,8 @@ window.addEventListener("DOMContentLoaded", () => {
   function drawPolarBears() {
     // Рисуем несколько маленьких "медведей"-кружочков на полюсе
     const bearsToDraw = 5;
-    const y = (northPoleRows * cellHeight) / 2;
+    const northHeight = northPoleRows * cellHeight;
+    const y = northHeight * 0.7; // ниже текста, ближе к нижней границе полосы
     const radius = cellHeight * 0.18;
 
     ctx.fillStyle = "#ffffff";
@@ -229,14 +256,75 @@ window.addEventListener("DOMContentLoaded", () => {
   }
 
   function drawScore() {
-    // Пишем "Спасено: N" над континентом, слева внизу
+    // Пишем "Спасено: N" прямо на континенте, слева внизу зелёной полосы
+    const bandTop = canvas.height - continentRows * cellHeight;
+    const bandHeight = continentRows * cellHeight;
+    const y = bandTop + bandHeight * 0.7;
+
     ctx.fillStyle = "#ffffff";
     ctx.font = "16px Segoe UI";
     ctx.textAlign = "left";
-    ctx.textBaseline = "bottom";
+    ctx.textBaseline = "middle";
     const scoreText = `Спасено: ${savedBears} белых медведей`;
-    const y = canvas.height - continentRows * cellHeight - 8;
     ctx.fillText(scoreText, 10, y);
+  }
+
+  // ----- ТАЙМЕР НА ЭКРАНЕ И ОБНОВЛЕНИЕ РАУНДА -----
+  function updateTimer(now) {
+    if (gameOver) return;
+
+    const elapsed = now - roundStartTime;
+    const remaining = ROUND_DURATION_MS - elapsed;
+
+    if (remaining <= 0) {
+      gameOver = true;
+      clearDirection();
+      console.log("Время вышло! Раунд завершён.");
+    }
+  }
+
+  function formatTime(ms) {
+    const totalSeconds = Math.max(0, Math.floor(ms / 1000));
+    const minutes = Math.floor(totalSeconds / 60);
+    const seconds = totalSeconds % 60;
+    const mm = String(minutes).padStart(1, "0");
+    const ss = String(seconds).padStart(2, "0");
+    return `${mm}:${ss}`;
+  }
+
+  function drawTimer(now) {
+    const elapsed = now - roundStartTime;
+    const remaining = Math.max(0, ROUND_DURATION_MS - elapsed);
+    const text = `Время: ${formatTime(remaining)}`;
+
+    ctx.fillStyle = "#ffffff";
+    ctx.font = "16px Segoe UI";
+    ctx.textAlign = "right";
+    ctx.textBaseline = "top";
+
+    // Рисуем в правом верхнем углу, чуть ниже полюса
+    const x = canvas.width - 10;
+    const y = northPoleRows * cellHeight + 10;
+    ctx.fillText(text, x, y);
+  }
+
+  function drawGameOverOverlay() {
+    ctx.fillStyle = "rgba(0, 0, 0, 0.5)";
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+    ctx.fillStyle = "#ffffff";
+    ctx.font = "28px Segoe UI";
+    ctx.textAlign = "center";
+    ctx.textBaseline = "middle";
+    ctx.fillText("Время вышло!", canvas.width / 2, canvas.height / 2 - 10);
+
+    ctx.font = "18px Segoe UI";
+    ctx.fillText(
+      `Спасено: ${savedBears} белых медведей`,
+      canvas.width / 2,
+      canvas.height / 2 + 20
+    );
+    // Перезапуск пока через F5
   }
 
   // ----- ЛОГИКА "ДОШЁЛ ДО ПОЛЮСА/КОНТИНЕНТА" -----
