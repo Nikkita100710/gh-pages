@@ -81,8 +81,11 @@ window.addEventListener("DOMContentLoaded", () => {
     // Потом рисуем всё
     ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-    // Океан
-    ctx.fillStyle = "#003366";
+    // Океан с лёгким градиентом
+    const oceanGradient = ctx.createLinearGradient(0, 0, 0, canvas.height);
+    oceanGradient.addColorStop(0, "#002b55");  // темнее сверху
+    oceanGradient.addColorStop(1, "#005080");  // чуть светлее снизу
+    ctx.fillStyle = oceanGradient;
     ctx.fillRect(0, 0, canvas.width, canvas.height);
 
     // Северный полюс (верхняя полоса, ряд 0)
@@ -186,21 +189,36 @@ window.addEventListener("DOMContentLoaded", () => {
     }
   }
 
-  function drawPolarBears() {
-    // Рисуем несколько маленьких "медведей"-кружочков на полюсе
-    const bearsToDraw = 5;
-    const northHeight = northPoleRows * cellHeight;
-    const y = northHeight * 0.7; // ниже текста, ближе к нижней границе полосы
-    const radius = cellHeight * 0.18;
+function drawPolarBears() {
+  const bearsToDraw = 5;
+  const northHeight = northPoleRows * cellHeight;
+  const bodyY = northHeight * 0.7; // ниже текста
+  const bodyRadius = cellHeight * 0.18;
+  const earRadius = bodyRadius * 0.4;
 
+  for (let i = 0; i < bearsToDraw; i++) {
+    const x = ((i + 1) * canvas.width) / (bearsToDraw + 1);
+
+    // Тело
     ctx.fillStyle = "#ffffff";
-    for (let i = 0; i < bearsToDraw; i++) {
-      const x = ((i + 1) * canvas.width) / (bearsToDraw + 1);
-      ctx.beginPath();
-      ctx.arc(x, y, radius, 0, Math.PI * 2);
-      ctx.fill();
-    }
+    ctx.beginPath();
+    ctx.arc(x, bodyY, bodyRadius, 0, Math.PI * 2);
+    ctx.fill();
+
+    // Ушки
+    ctx.beginPath();
+    ctx.arc(x - bodyRadius * 0.6, bodyY - bodyRadius * 0.6, earRadius, 0, Math.PI * 2);
+    ctx.arc(x + bodyRadius * 0.6, bodyY - bodyRadius * 0.6, earRadius, 0, Math.PI * 2);
+    ctx.fill();
+
+    // Нос/морда (маленькая тёмная точка)
+    ctx.fillStyle = "#333333";
+    ctx.beginPath();
+    ctx.arc(x, bodyY + bodyRadius * 0.1, bodyRadius * 0.2, 0, Math.PI * 2);
+    ctx.fill();
   }
+}
+
 
   function drawPlayer() {
     const xCenter = player.col * cellWidth + cellWidth / 2;
@@ -244,16 +262,46 @@ window.addEventListener("DOMContentLoaded", () => {
     ctx.fillText("Player", xCenter, yCenter - shipHeight / 2 - 2);
   }
 
-  function drawIcebergs() {
-    ctx.fillStyle = "#d0f0ff";
-    for (const iceberg of icebergs) {
-      const x = iceberg.col * cellWidth;
-      const y = iceberg.row * cellHeight;
-      ctx.beginPath();
-      ctx.rect(x + 4, y + 4, cellWidth - 8, cellHeight - 8);
-      ctx.fill();
-    }
+function drawIcebergs() {
+  for (const iceberg of icebergs) {
+    const x = iceberg.col * cellWidth;
+    const y = iceberg.row * cellHeight;
+
+    const padding = 6;
+    const left   = x + padding;
+    const right  = x + cellWidth - padding;
+    const top    = y + padding;
+    const bottom = y + cellHeight - padding;
+    const midX   = (left + right) / 2;
+
+    // Тело айсберга — многоугольник с "ломаной" верхушкой
+    ctx.fillStyle = "#e0f7ff";
+    ctx.beginPath();
+    ctx.moveTo(left, bottom);
+    ctx.lineTo(left, (top + bottom) / 2);
+    ctx.lineTo(midX - (cellWidth * 0.1), top + padding / 2);
+    ctx.lineTo(midX + (cellWidth * 0.1), top);
+    ctx.lineTo(right, (top + bottom) / 2);
+    ctx.lineTo(right, bottom);
+    ctx.closePath();
+    ctx.fill();
+
+    // Лёгкая тень снизу
+    ctx.fillStyle = "rgba(0, 0, 0, 0.15)";
+    ctx.beginPath();
+    ctx.ellipse(
+      (left + right) / 2,
+      bottom + 3,
+      (right - left) / 2,
+      4,
+      0,
+      0,
+      Math.PI * 2
+    );
+    ctx.fill();
   }
+}
+
 
   function drawScore() {
     // Пишем "Спасено: N" прямо на континенте, слева внизу зелёной полосы
