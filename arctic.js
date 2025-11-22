@@ -2,7 +2,9 @@
 // 0-й ряд: Северный полюс (белая полоса)
 // 11-й ряд: Континент (зелёная полоса)
 // Корабль ходит только по воде: ряды 1–10.
-// Движение: не чаще одного шага каждые MOVE_DELAY мс (200 мс).
+//
+// Движение корабля: не чаще одного шага каждые MOVE_DELAY мс (200 мс).
+// Айсберги 1x1: ряды 2..9, движутся слева направо, шаг каждые 500 мс.
 
 window.addEventListener("DOMContentLoaded", () => {
   const canvas = document.getElementById("gameCanvas");
@@ -23,11 +25,24 @@ window.addEventListener("DOMContentLoaded", () => {
   const northPoleRows = 1; // ряд 0
   const continentRows = 1; // ряд 11
 
-  // ----- ПАРАМЕТРЫ ДВИЖЕНИЯ -----
-  const MOVE_DELAY = 200; // мс между шагами (<= 5 шагов в секунду)
+  // ----- ПАРАМЕТРЫ ДВИЖЕНИЯ КОРАБЛЯ -----
+  const MOVE_DELAY = 200; // мс между шагами корабля (<= 5 шагов в секунду)
   let lastMoveTime = 0;
   let desiredDx = 0; // -1, 0, 1
   let desiredDy = 0; // -1, 0, 1
+
+  // ----- АЙСБЕРГИ -----
+  const ICEBERG_MOVE_DELAY = 500;   // мс между шагами айсбергов
+  const ICEBERG_SPAWN_DELAY = 1200; // мс между попытками спавна нового айсберга
+  const ICEBERG_MAX_COUNT = 10;     // максимум айсбергов одновременно
+
+  // айсберги будут только в рядах 2..9 (вода между парковочными рядами 1 и 10)
+  const ICEBERG_MIN_ROW = 2;
+  const ICEBERG_MAX_ROW = GRID_ROWS - 3; // 12 - 3 = 9
+
+  let icebergs = [];
+  let lastIcebergMoveTime = 0;
+  let lastIcebergSpawnTime = 0;
 
   // ----- СОСТОЯНИЕ ИГРОКА -----
   const player = {
@@ -35,12 +50,18 @@ window.addEventListener("DOMContentLoaded", () => {
     row: GRID_ROWS - 2, // 10-я строка (0..11), над континентом
   };
 
+  function resetPlayerPosition() {
+    player.col = Math.floor(GRID_COLS / 2);
+    player.row = GRID_ROWS - 2;
+  }
+
   // ----- ОСНОВНОЙ ЦИКЛ ОТРИСОВКИ -----
   function draw() {
     const now = Date.now();
 
-    // Сначала обрабатываем движение с ограничением по времени
+    // Сначала обрабатываем движение корабля и айсбергов
     handleMovement(now);
+    handleIcebergs(now);
 
     // Потом рисуем всё
     ctx.clearRect(0, 0, canvas.width, canvas.height);
@@ -87,6 +108,9 @@ window.addEventListener("DOMContentLoaded", () => {
 
     // Сетка
     drawGrid();
+
+    // Айсберги
+    drawIcebergs();
 
     // Кораблик
     drawPlayer();
@@ -143,6 +167,18 @@ window.addEventListener("DOMContentLoaded", () => {
     ctx.fillText("Player", xCenter, yCenter - shipHeight / 2 - 2);
   }
 
+  // ----- РИСОВАНИЕ АЙСБЕРГОВ -----
+  function drawIcebergs() {
+    ctx.fillStyle = "#d0f0ff";
+    for (const iceberg of icebergs) {
+      const x = iceberg.col * cellWidth;
+      const y = iceberg.row * cellHeight;
+      ctx.beginPath();
+      ctx.rect(x + 4, y + 4, cellWidth - 8, cellHeight - 8);
+      ctx.fill();
+    }
+  }
+
   // ----- ЛОГИКА "ДОШЁЛ ДО ПОЛЮСА/КОНТИНЕНТА" -----
   function handleReachNorthPole() {
     // Здесь потом будет логика "забрать медведя"
@@ -182,7 +218,7 @@ window.addEventListener("DOMContentLoaded", () => {
     }
   }
 
-  // ----- ОГРАНИЧЕНИЕ ПО ВРЕМЕНИ МЕЖДУ ШАГАМИ -----
+  // ----- ОГРАНИЧЕНИЕ ПО ВРЕМЕНИ МЕЖДУ ШАГАМИ КОРАБЛЯ -----
   function handleMovement(now) {
     // Если никуда не хотим двигаться — выходим
     if (desiredDx === 0 && desiredDy === 0) return;
@@ -193,6 +229,62 @@ window.addEventListener("DOMContentLoaded", () => {
     // Делаем шаг
     movePlayer(desiredDx, desiredDy);
     lastMoveTime = now;
+  }
+
+  // ----- АЙСБЕРГИ: ДВИЖЕНИЕ, СПАВН, СТОЛКНОВЕНИЯ -----
+  function handleIcebergs(now) {
+    // Двигаем айсберги
+    if (now - lastIcebergMoveTime >= ICEBERG_MOVE_DELAY) {
+      moveIcebergs();
+      lastIcebergMoveTime = now;
+    }
+
+    // Спавним новый айсберг
+    if (
+      now - lastIcebergSpawnTime >= ICEBERG_SPAWN_DELAY &&
+      icebergs.length < ICEBERG_MAX_COUNT
+    ) {
+      spawnIceberg();
+      lastIcebergSpawnTime = now;
+    }
+
+    // Проверяем столкновение с кораблём
+    checkCollisionsWithIcebergs();
+  }
+
+  function moveIcebergs() {
+    for (const iceberg of icebergs) {
+      iceberg.col += 1;
+    }
+    // Убираем айсберги, вышедшие за правый край
+    icebergs = icebergs.filter((iceberg) => iceberg.col < GRID_COLS);
+  }
+
+  function spawnIceberg() {
+    const row =
+      Math.floor(Math.random() * (ICEBERG_MAX_ROW - ICEBERG_MIN_ROW + 1)) +
+      ICEBERG_MIN_ROW;
+
+    icebergs.push({
+      row,
+      col: 0, // начинаем слева
+    });
+  }
+
+  function checkCollisionsWithIcebergs() {
+    for (const iceberg of icebergs) {
+      if (iceberg.row === player.row && iceberg.col === player.col) {
+        handleIcebergCollision();
+        break;
+      }
+    }
+  }
+
+  function handleIcebergCollision() {
+    console.log("Столкновение с айсбергом! Корабль возвращён на старт.");
+    resetPlayerPosition();
+    clearDirection();
+    // Медведей пока не считаем — позже сюда добавим логику счёта
   }
 
   // ----- ВСПОМОГАТЕЛЬНЫЕ ФУНКЦИИ УПРАВЛЕНИЯ -----
@@ -252,7 +344,6 @@ window.addEventListener("DOMContentLoaded", () => {
 
   window.addEventListener("keyup", (e) => {
     if (isMovementKey(e.key)) {
-      // Отпустили любую "ходовую" клавишу — останавливаемся
       clearDirection();
     }
   });
@@ -271,7 +362,6 @@ window.addEventListener("DOMContentLoaded", () => {
       setDirection(dx, dy);
     });
 
-    // pointerup / pointerleave / pointercancel — чтобы при уходе пальца/мыши останавливались
     const stop = (e) => {
       e.preventDefault();
       clearDirection();
