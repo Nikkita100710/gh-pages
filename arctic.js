@@ -5,6 +5,7 @@
 //
 // Движение корабля: не чаще одного шага каждые MOVE_DELAY мс (200 мс).
 // Айсберги 1x1: ряды 2..9, движутся слева направо, шаг каждые 500 мс.
+// Белые медведи: бесконечный запас на полюсе, счётчик спасённых на континенте.
 
 window.addEventListener("DOMContentLoaded", () => {
   const canvas = document.getElementById("gameCanvas");
@@ -44,11 +45,14 @@ window.addEventListener("DOMContentLoaded", () => {
   let lastIcebergMoveTime = 0;
   let lastIcebergSpawnTime = 0;
 
-  // ----- СОСТОЯНИЕ ИГРОКА -----
+  // ----- СОСТОЯНИЕ ИГРОКА И МЕДВЕДЕЙ -----
   const player = {
     col: Math.floor(GRID_COLS / 2),
     row: GRID_ROWS - 2, // 10-я строка (0..11), над континентом
   };
+
+  let carryingBear = false; // везём медведя или нет
+  let savedBears = 0;       // сколько спасли
 
   function resetPlayerPosition() {
     player.col = Math.floor(GRID_COLS / 2);
@@ -78,6 +82,39 @@ window.addEventListener("DOMContentLoaded", () => {
       canvas.width,
       northPoleRows * cellHeight
     );
+
+    // Континент (нижняя полоса, ряд 11)
+    ctx.fillStyle = "#145a32";
+    ctx.fillRect(
+      0,
+      canvas.height - continentRows * cellHeight,
+      canvas.width,
+      continentRows * cellHeight
+    );
+
+    // Мелкий декор: надписи
+    drawPoleLabels();
+
+    // Белые медведи на полюсе (декоративные)
+    drawPolarBears();
+
+    // Сетка
+    drawGrid();
+
+    // Айсберги
+    drawIcebergs();
+
+    // Кораблик (с медведем или без)
+    drawPlayer();
+
+    // Счётчик спасённых медведей
+    drawScore();
+
+    requestAnimationFrame(draw);
+  }
+
+  function drawPoleLabels() {
+    // Подпись Северного полюса
     ctx.fillStyle = "#003366";
     ctx.font = "16px Segoe UI";
     ctx.textAlign = "center";
@@ -88,14 +125,7 @@ window.addEventListener("DOMContentLoaded", () => {
       (northPoleRows * cellHeight) / 2
     );
 
-    // Континент (нижняя полоса, ряд 11)
-    ctx.fillStyle = "#145a32";
-    ctx.fillRect(
-      0,
-      canvas.height - continentRows * cellHeight,
-      canvas.width,
-      continentRows * cellHeight
-    );
+    // Подпись континента
     ctx.fillStyle = "#ffffff";
     ctx.font = "16px Segoe UI";
     ctx.textAlign = "center";
@@ -105,17 +135,6 @@ window.addEventListener("DOMContentLoaded", () => {
       canvas.width / 2,
       canvas.height - (continentRows * cellHeight) / 2
     );
-
-    // Сетка
-    drawGrid();
-
-    // Айсберги
-    drawIcebergs();
-
-    // Кораблик
-    drawPlayer();
-
-    requestAnimationFrame(draw);
   }
 
   function drawGrid() {
@@ -141,6 +160,21 @@ window.addEventListener("DOMContentLoaded", () => {
     }
   }
 
+  function drawPolarBears() {
+    // Рисуем несколько маленьких "медведей"-кружочков на полюсе
+    const bearsToDraw = 5;
+    const y = (northPoleRows * cellHeight) / 2;
+    const radius = cellHeight * 0.18;
+
+    ctx.fillStyle = "#ffffff";
+    for (let i = 0; i < bearsToDraw; i++) {
+      const x = ((i + 1) * canvas.width) / (bearsToDraw + 1);
+      ctx.beginPath();
+      ctx.arc(x, y, radius, 0, Math.PI * 2);
+      ctx.fill();
+    }
+  }
+
   function drawPlayer() {
     const xCenter = player.col * cellWidth + cellWidth / 2;
     const yCenter = player.row * cellHeight + cellHeight / 2;
@@ -148,6 +182,7 @@ window.addEventListener("DOMContentLoaded", () => {
     const shipWidth = cellWidth * 0.6;
     const shipHeight = cellHeight * 0.6;
 
+    // Корабль (треугольник)
     ctx.fillStyle = "#ffcc00";
     ctx.beginPath();
     // Нос вверх
@@ -159,7 +194,22 @@ window.addEventListener("DOMContentLoaded", () => {
     ctx.closePath();
     ctx.fill();
 
-    // Подпись
+    // Если везём медведя — рисуем белый кружок на корабле
+    if (carryingBear) {
+      const bearRadius = Math.min(cellWidth, cellHeight) * 0.18;
+      ctx.fillStyle = "#ffffff";
+      ctx.beginPath();
+      ctx.arc(
+        xCenter,
+        yCenter - shipHeight * 0.1, // чуть выше центра корабля
+        bearRadius,
+        0,
+        Math.PI * 2
+      );
+      ctx.fill();
+    }
+
+    // Подпись корабля
     ctx.fillStyle = "#ffffff";
     ctx.font = "12px Segoe UI";
     ctx.textAlign = "center";
@@ -167,7 +217,6 @@ window.addEventListener("DOMContentLoaded", () => {
     ctx.fillText("Player", xCenter, yCenter - shipHeight / 2 - 2);
   }
 
-  // ----- РИСОВАНИЕ АЙСБЕРГОВ -----
   function drawIcebergs() {
     ctx.fillStyle = "#d0f0ff";
     for (const iceberg of icebergs) {
@@ -179,15 +228,33 @@ window.addEventListener("DOMContentLoaded", () => {
     }
   }
 
+  function drawScore() {
+    // Пишем "Спасено: N" над континентом, слева внизу
+    ctx.fillStyle = "#ffffff";
+    ctx.font = "16px Segoe UI";
+    ctx.textAlign = "left";
+    ctx.textBaseline = "bottom";
+    const scoreText = `Спасено: ${savedBears} белых медведей`;
+    const y = canvas.height - continentRows * cellHeight - 8;
+    ctx.fillText(scoreText, 10, y);
+  }
+
   // ----- ЛОГИКА "ДОШЁЛ ДО ПОЛЮСА/КОНТИНЕНТА" -----
   function handleReachNorthPole() {
-    // Здесь потом будет логика "забрать медведя"
-    console.log("Корабль достиг Северного полюса");
+    // Берём медведя на борт, если ещё никого не везём
+    if (!carryingBear) {
+      carryingBear = true;
+      console.log("Медведь взят на борт на Северном полюсе");
+    }
   }
 
   function handleReachContinent() {
-    // Здесь потом будет логика "высадить медведя"
-    console.log("Корабль достиг континента");
+    // Высаживаем медведя и увеличиваем счётчик
+    if (carryingBear) {
+      carryingBear = false;
+      savedBears += 1;
+      console.log("Медведь доставлен на континент. Всего спасено:", savedBears);
+    }
   }
 
   // ----- ДВИЖЕНИЕ КОРАБЛЯ ПО КЛЕТКАМ (БЕЗ ТАЙМЕРА) -----
@@ -282,9 +349,12 @@ window.addEventListener("DOMContentLoaded", () => {
 
   function handleIcebergCollision() {
     console.log("Столкновение с айсбергом! Корабль возвращён на старт.");
+    // Если везли медведя — он не считается спасённым, просто "теряем"
+    if (carryingBear) {
+      carryingBear = false;
+    }
     resetPlayerPosition();
     clearDirection();
-    // Медведей пока не считаем — позже сюда добавим логику счёта
   }
 
   // ----- ВСПОМОГАТЕЛЬНЫЕ ФУНКЦИИ УПРАВЛЕНИЯ -----
@@ -325,7 +395,6 @@ window.addEventListener("DOMContentLoaded", () => {
         break;
 
       default:
-        // Не управляющая клавиша — игнорируем
         break;
     }
   }
