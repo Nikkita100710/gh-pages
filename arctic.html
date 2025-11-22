@@ -6,6 +6,85 @@
   <title>Arctic Rescue</title>
 
   <style>
+    /* Вступительное затемнение */
+.intro-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.7);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+}
+
+/* Окно с текстом */
+.intro-window {
+  background: #0b2740;
+  color: #ffffff;
+  max-width: 520px;
+  padding: 24px 28px;
+  border-radius: 16px;
+  box-shadow: 0 12px 35px rgba(0, 0, 0, 0.6);
+  font-family: "Segoe UI", system-ui, sans-serif;
+  line-height: 1.4;
+}
+
+.intro-window h1 {
+  font-size: 22px;
+  margin-bottom: 12px;
+  text-align: center;
+}
+
+.intro-window h2 {
+  font-size: 18px;
+  margin: 14px 0 6px;
+}
+
+.intro-window p {
+  margin: 6px 0;
+}
+
+.intro-window ul {
+  margin: 6px 0 4px 18px;
+  padding-left: 0;
+}
+
+.intro-window li {
+  margin-bottom: 4px;
+}
+
+.intro-note {
+  font-size: 13px;
+  opacity: 0.9;
+  margin-top: 8px;
+}
+
+/* Кнопка "Старт" */
+.intro-start-btn {
+  margin-top: 14px;
+  width: 100%;
+  padding: 10px 0;
+  border-radius: 999px;
+  border: none;
+  font-size: 16px;
+  font-weight: 600;
+  background: #ffcc33;
+  color: #2b2b2b;
+  cursor: pointer;
+  transition: transform 0.1s ease, box-shadow 0.1s ease, background 0.2s ease;
+}
+
+.intro-start-btn:hover {
+  background: #ffdf66;
+  box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.3);
+  transform: translateY(-1px);
+}
+
+.intro-start-btn:active {
+  transform: translateY(1px) scale(0.98);
+  box-shadow: none;
+}
+
     * {
       box-sizing: border-box;
       margin: 0;
@@ -80,7 +159,47 @@
   </style>
 </head>
 <body>
+ <!-- ВСТУПИТЕЛЬНОЕ ОКНО-СЛОЙ С ИНСТРУКЦИЕЙ -->
+  <div id="intro" class="intro-overlay">
+    <div class="intro-window">
+      <h1>Arctic Rescue — спасаем белых медведей</h1>
 
+      <p>
+        В Северном Ледовитом океане дрейфуют айсберги. 
+        Белые медведи застряли на Северном полюсе и ждут помощи.
+        Твой ледокол должен перевезти как можно больше медведей
+        с полюса (верхняя белая полоса) на континент (нижняя зелёная полоса).
+      </p>
+
+      <h2>Как играть</h2>
+      <ul>
+        <li><strong>Цель:</strong> за 1&nbsp;минуту спасти как можно больше белых медведей.</li>
+        <li><strong>Шаг 1.</strong> Двигай корабль по клеткам океана, обходя айсберги.</li>
+        <li><strong>Шаг 2.</strong> Доплыви до Северного полюса (самый верх). 
+            Попробуй выйти ещё на одну клетку вверх — медведь прыгает на корабль.</li>
+        <li><strong>Шаг 3.</strong> Вернись к континенту (нижняя зелёная полоса) и
+            попробуй сделать шаг ещё ниже — медведь считается спасённым.</li>
+        <li><strong>Столкновение с айсбергом:</strong> корабль возвращается на старт,
+            медведь с палубы пропадает.</li>
+      </ul>
+
+      <h2>Управление</h2>
+      <ul>
+        <li><strong>Компьютер:</strong> стрелки на клавиатуре или клавиши <strong>W&nbsp;A&nbsp;S&nbsp;D</strong>.</li>
+        <li><strong>Телефон / планшет:</strong> нажимай на круглые стрелки под полем.</li>
+      </ul>
+
+      <p class="intro-note">
+        Когда будешь готов — нажми кнопку ниже. Таймер 1&nbsp;минута
+        стартует сразу после начала игры.
+      </p>
+
+      <button id="startButton" class="intro-start-btn">
+        Начать спасательную миссию
+      </button>
+    </div>
+  </div>
+  
   <div id="game-container">
     <!-- 10 колонок, 12 строк, клетки квадратные 60x60 -->
     <canvas id="gameCanvas" width="600" height="720"></canvas>
