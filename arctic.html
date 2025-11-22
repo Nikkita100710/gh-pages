@@ -4,87 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Arctic Rescue</title>
-
   <style>
-    /* Вступительное затемнение */
-.intro-overlay {
-  position: fixed;
-  inset: 0;
-  background: rgba(0, 0, 0, 0.7);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  z-index: 1000;
-}
-
-/* Окно с текстом */
-.intro-window {
-  background: #0b2740;
-  color: #ffffff;
-  max-width: 520px;
-  padding: 24px 28px;
-  border-radius: 16px;
-  box-shadow: 0 12px 35px rgba(0, 0, 0, 0.6);
-  font-family: "Segoe UI", system-ui, sans-serif;
-  line-height: 1.4;
-}
-
-.intro-window h1 {
-  font-size: 22px;
-  margin-bottom: 12px;
-  text-align: center;
-}
-
-.intro-window h2 {
-  font-size: 18px;
-  margin: 14px 0 6px;
-}
-
-.intro-window p {
-  margin: 6px 0;
-}
-
-.intro-window ul {
-  margin: 6px 0 4px 18px;
-  padding-left: 0;
-}
-
-.intro-window li {
-  margin-bottom: 4px;
-}
-
-.intro-note {
-  font-size: 13px;
-  opacity: 0.9;
-  margin-top: 8px;
-}
-
-/* Кнопка "Старт" */
-.intro-start-btn {
-  margin-top: 14px;
-  width: 100%;
-  padding: 10px 0;
-  border-radius: 999px;
-  border: none;
-  font-size: 16px;
-  font-weight: 600;
-  background: #ffcc33;
-  color: #2b2b2b;
-  cursor: pointer;
-  transition: transform 0.1s ease, box-shadow 0.1s ease, background 0.2s ease;
-}
-
-.intro-start-btn:hover {
-  background: #ffdf66;
-  box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.3);
-  transform: translateY(-1px);
-}
-
-.intro-start-btn:active {
-  transform: translateY(1px) scale(0.98);
-  box-shadow: none;
-}
-
     * {
       box-sizing: border-box;
       margin: 0;
@@ -92,106 +12,267 @@
     }
 
     body {
-      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-      background: #0b1b33;
-      color: #fff;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: flex-start;
       min-height: 100vh;
-      padding: 10px;
+      background: #020b18;
+      color: #ffffff;
+      font-family: "Segoe UI", system-ui, -apple-system, BlinkMacSystemFont,
+        sans-serif;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 16px;
     }
 
-    #game-container {
+    .page {
+      width: 100%;
+      max-width: 720px;
+    }
+
+    .game-card {
+      background: radial-gradient(circle at top, #123b66 0%, #061629 50%, #020b18 100%);
+      border-radius: 16px;
+      padding: 16px 16px 20px;
+      box-shadow: 0 16px 40px rgba(0, 0, 0, 0.7);
+    }
+
+    .game-title {
+      text-align: center;
+      font-size: 20px;
+      margin-bottom: 10px;
+    }
+
+    .canvas-wrapper {
+      border-radius: 12px;
+      overflow: hidden;
+      border: 2px solid rgba(255, 255, 255, 0.2);
+    }
+
+    /* Сам canvas фиксирован по пикселям, но сжимается по ширине экрана */
+    #gameCanvas {
+      display: block;
+      width: 100%;
+      max-width: 600px;
+      margin: 0 auto;
+      background: #002b55;
+    }
+
+    /* Блок с кнопками управления */
+    .controls {
+      margin-top: 18px;
       display: flex;
       flex-direction: column;
       align-items: center;
       gap: 10px;
-      max-width: 100%;
     }
 
-    /* Поле игры */
-    #gameCanvas {
-      background: #001f3f;
-      border: 2px solid #fff;
-      border-radius: 8px;
-      max-width: 100%;
-      height: auto;
-      touch-action: none;
-    }
-
-    /* Круг управления */
-    #controls {
-      margin-top: 10px;
-      display: grid;
-      grid-template-columns: 60px 60px 60px;
-      grid-template-rows: 60px 60px 60px;
-      gap: 5px;
+    .controls-row {
+      display: flex;
       justify-content: center;
-      align-items: center;
-      touch-action: manipulation;
+      gap: 32px;
     }
 
-    .ctrl-btn {
+    .controls-row.middle {
+      gap: 40px;
+      margin-top: 4px;
+    }
+
+    .control-btn {
       width: 60px;
       height: 60px;
       border-radius: 50%;
-      border: 1px solid #fff;
-      background: #123;
-      color: #fff;
-      font-size: 20px;
+      border: 2px solid rgba(255, 255, 255, 0.8);
+      background: transparent;
+      color: #ffffff;
+      font-size: 26px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      transition: background 0.15s ease, transform 0.1s ease,
+        box-shadow 0.15s ease;
+      touch-action: manipulation;
+    }
+
+    .control-btn:hover {
+      background: rgba(255, 255, 255, 0.08);
+      box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.3);
+    }
+
+    .control-btn:active {
+      transform: translateY(1px) scale(0.97);
+      box-shadow: none;
+      background: rgba(255, 255, 255, 0.18);
+    }
+
+    .control-btn span {
+      pointer-events: none;
+    }
+
+    .hint {
+      margin-top: 8px;
+      font-size: 12px;
+      text-align: center;
+      opacity: 0.9;
+    }
+
+    /* ВСТУПИТЕЛЬНОЕ ОКНО-ИНСТРУКЦИЯ */
+
+    .intro-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.7);
       display: flex;
       justify-content: center;
       align-items: center;
+      z-index: 1000;
+
+      /* чтобы на маленьких экранах всю карточку можно было прокрутить */
+      padding: 16px;
+      overflow-y: auto;
+    }
+
+    .intro-window {
+      background: #0b2740;
+      color: #ffffff;
+      width: 100%;
+      max-width: 520px;
+      padding: 20px 22px;
+      border-radius: 16px;
+      box-shadow: 0 12px 35px rgba(0, 0, 0, 0.6);
+      font-family: "Segoe UI", system-ui, sans-serif;
+      line-height: 1.4;
+
+      /* не даём окну быть выше экрана, внутри него можно прокрутить текст */
+      max-height: 100vh;
+      overflow-y: auto;
+    }
+
+    .intro-window h1 {
+      font-size: 22px;
+      margin-bottom: 12px;
+      text-align: center;
+    }
+
+    .intro-window h2 {
+      font-size: 18px;
+      margin: 14px 0 6px;
+    }
+
+    .intro-window p {
+      margin: 6px 0;
+    }
+
+    .intro-window ul {
+      margin: 6px 0 4px 18px;
+      padding-left: 0;
+    }
+
+    .intro-window li {
+      margin-bottom: 4px;
+    }
+
+    .intro-note {
+      font-size: 13px;
+      opacity: 0.9;
+      margin-top: 8px;
+    }
+
+    .intro-start-btn {
+      margin-top: 14px;
+      width: 100%;
+      padding: 10px 0;
+      border-radius: 999px;
+      border: none;
+      font-size: 16px;
+      font-weight: 600;
+      background: #ffcc33;
+      color: #2b2b2b;
       cursor: pointer;
-      user-select: none;
+      transition: transform 0.1s ease, box-shadow 0.1s ease,
+        background 0.2s ease;
     }
 
-    .ctrl-btn:active {
-      background: #345;
+    .intro-start-btn:hover {
+      background: #ffdf66;
+      box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.3);
+      transform: translateY(-1px);
     }
 
-    #btn-up   { grid-column: 2 / 3; grid-row: 1 / 2; }
-    #btn-left { grid-column: 1 / 2; grid-row: 2 / 3; }
-    #btn-right{ grid-column: 3 / 4; grid-row: 2 / 3; }
-    #btn-down { grid-column: 2 / 3; grid-row: 3 / 4; }
+    .intro-start-btn:active {
+      transform: translateY(1px) scale(0.98);
+      box-shadow: none;
+    }
+
+    /* Адаптация под узкие экраны */
+    @media (max-width: 480px) {
+      .game-card {
+        padding: 12px 10px 16px;
+      }
+
+      .game-title {
+        font-size: 18px;
+      }
+
+      .control-btn {
+        width: 52px;
+        height: 52px;
+        font-size: 22px;
+      }
+
+      .intro-window {
+        font-size: 14px;
+        padding: 16px 14px;
+      }
+
+      .intro-window h1 {
+        font-size: 18px;
+      }
+
+      .intro-window h2 {
+        font-size: 16px;
+      }
+
+      .intro-start-btn {
+        font-size: 14px;
+        padding: 8px 0;
+      }
+    }
   </style>
 </head>
 <body>
- <!-- ВСТУПИТЕЛЬНОЕ ОКНО-СЛОЙ С ИНСТРУКЦИЕЙ -->
+  <!-- ВСТУПИТЕЛЬНАЯ ИНСТРУКЦИЯ -->
   <div id="intro" class="intro-overlay">
     <div class="intro-window">
       <h1>Arctic Rescue — спасаем белых медведей</h1>
 
       <p>
-        В Северном Ледовитом океане дрейфуют айсберги. 
-        Белые медведи застряли на Северном полюсе и ждут помощи.
-        Твой ледокол должен перевезти как можно больше медведей
-        с полюса (верхняя белая полоса) на континент (нижняя зелёная полоса).
+        В Северном Ледовитом океане дрейфуют айсберги. Белые медведи застряли
+        на Северном полюсе и ждут помощи. Твой ледокол должен перевезти как
+        можно больше медведей с полюса (верхняя белая полоса) на континент
+        (нижняя зелёная полоса).
       </p>
 
       <h2>Как играть</h2>
       <ul>
         <li><strong>Цель:</strong> за 1&nbsp;минуту спасти как можно больше белых медведей.</li>
         <li><strong>Шаг 1.</strong> Двигай корабль по клеткам океана, обходя айсберги.</li>
-        <li><strong>Шаг 2.</strong> Доплыви до Северного полюса (самый верх). 
-            Попробуй выйти ещё на одну клетку вверх — медведь прыгает на корабль.</li>
-        <li><strong>Шаг 3.</strong> Вернись к континенту (нижняя зелёная полоса) и
-            попробуй сделать шаг ещё ниже — медведь считается спасённым.</li>
+        <li><strong>Шаг 2.</strong> Доплыви до Северного полюса (самый верх).
+          Попробуй выйти ещё на одну клетку вверх — медведь прыгает на корабль.</li>
+        <li><strong>Шаг 3.</strong> Вернись к континенту (нижняя зелёная полоса)
+          и попробуй сделать шаг ещё ниже — медведь считается спасённым.</li>
         <li><strong>Столкновение с айсбергом:</strong> корабль возвращается на старт,
-            медведь с палубы пропадает.</li>
+          медведь с палубы пропадает.</li>
       </ul>
 
       <h2>Управление</h2>
       <ul>
-        <li><strong>Компьютер:</strong> стрелки на клавиатуре или клавиши <strong>W&nbsp;A&nbsp;S&nbsp;D</strong>.</li>
+        <li><strong>Компьютер:</strong> стрелки на клавиатуре или клавиши <strong>W A S D</strong>.</li>
         <li><strong>Телефон / планшет:</strong> нажимай на круглые стрелки под полем.</li>
       </ul>
 
       <p class="intro-note">
-        Когда будешь готов — нажми кнопку ниже. Таймер 1&nbsp;минута
-        стартует сразу после начала игры.
+        Когда будешь готов — нажми кнопку ниже. Таймер 1&nbsp;минута стартует
+        сразу после начала игры.
       </p>
 
       <button id="startButton" class="intro-start-btn">
@@ -199,17 +280,43 @@
       </button>
     </div>
   </div>
-  
-  <div id="game-container">
-    <!-- 10 колонок, 12 строк, клетки квадратные 60x60 -->
-    <canvas id="gameCanvas" width="600" height="720"></canvas>
 
-    <div id="controls">
-      <button id="btn-up"   class="ctrl-btn">▲</button>
-      <button id="btn-left" class="ctrl-btn">◀</button>
-      <button id="btn-right"class="ctrl-btn">▶</button>
-      <button id="btn-down" class="ctrl-btn">▼</button>
-    </div>
+  <!-- ОСНОВНОЙ ЭКРАН ИГРЫ -->
+  <div class="page">
+    <main class="game-card">
+      <h2 class="game-title">Arctic Rescue — прототип поля</h2>
+
+      <div class="canvas-wrapper">
+        <canvas id="gameCanvas" width="600" height="720"></canvas>
+      </div>
+
+      <div class="controls">
+        <div class="controls-row">
+          <button id="btn-up" class="control-btn">
+            <span>▲</span>
+          </button>
+        </div>
+
+        <div class="controls-row middle">
+          <button id="btn-left" class="control-btn">
+            <span>◀</span>
+          </button>
+          <button id="btn-right" class="control-btn">
+            <span>▶</span>
+          </button>
+        </div>
+
+        <div class="controls-row">
+          <button id="btn-down" class="control-btn">
+            <span>▼</span>
+          </button>
+        </div>
+
+        <p class="hint">
+          Управление: стрелки / WASD на клавиатуре (ПК) или кнопки ниже (телефон).
+        </p>
+      </div>
+    </main>
   </div>
 
   <script src="arctic.js"></script>
