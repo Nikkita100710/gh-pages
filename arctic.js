@@ -1,7 +1,8 @@
-// Прототип поля: 10 колонок, 12 рядов.
+// Поле: 10 колонок, 12 рядов.
 // 0-й ряд: Северный полюс (белая полоса)
 // 11-й ряд: Континент (зелёная полоса)
 // Корабль ходит только по воде: ряды 1–10.
+// Движение: не чаще одного шага каждые MOVE_DELAY мс (200 мс).
 
 window.addEventListener("DOMContentLoaded", () => {
   const canvas = document.getElementById("gameCanvas");
@@ -12,25 +13,36 @@ window.addEventListener("DOMContentLoaded", () => {
     return;
   }
 
-  // Размер сетки
+  // ----- ПАРАМЕТРЫ СЕТКИ -----
   const GRID_COLS = 10;
   const GRID_ROWS = 12; // 1 ряд полюс, 10 воды, 1 континент
 
   const cellWidth = canvas.width / GRID_COLS;   // 600 / 10 = 60
   const cellHeight = canvas.height / GRID_ROWS; // 720 / 12 = 60
 
-  // Зоны
-  const northPoleRows = 1; // верхний ряд (0)
-  const continentRows = 1; // нижний ряд (11)
+  const northPoleRows = 1; // ряд 0
+  const continentRows = 1; // ряд 11
 
-  // Игрок / кораблик — стартуем над континентом (ряд 10)
+  // ----- ПАРАМЕТРЫ ДВИЖЕНИЯ -----
+  const MOVE_DELAY = 200; // мс между шагами (<= 5 шагов в секунду)
+  let lastMoveTime = 0;
+  let desiredDx = 0; // -1, 0, 1
+  let desiredDy = 0; // -1, 0, 1
+
+  // ----- СОСТОЯНИЕ ИГРОКА -----
   const player = {
     col: Math.floor(GRID_COLS / 2),
-    row: GRID_ROWS - 2, // 10-я строка (0..11)
+    row: GRID_ROWS - 2, // 10-я строка (0..11), над континентом
   };
 
-  // Основной цикл отрисовки
+  // ----- ОСНОВНОЙ ЦИКЛ ОТРИСОВКИ -----
   function draw() {
+    const now = Date.now();
+
+    // Сначала обрабатываем движение с ограничением по времени
+    handleMovement(now);
+
+    // Потом рисуем всё
     ctx.clearRect(0, 0, canvas.width, canvas.height);
 
     // Океан
@@ -131,7 +143,7 @@ window.addEventListener("DOMContentLoaded", () => {
     ctx.fillText("Player", xCenter, yCenter - shipHeight / 2 - 2);
   }
 
-  // Обработчики "дошли до полюса / континента"
+  // ----- ЛОГИКА "ДОШЁЛ ДО ПОЛЮСА/КОНТИНЕНТА" -----
   function handleReachNorthPole() {
     // Здесь потом будет логика "забрать медведя"
     console.log("Корабль достиг Северного полюса");
@@ -142,7 +154,7 @@ window.addEventListener("DOMContentLoaded", () => {
     console.log("Корабль достиг континента");
   }
 
-  // Движение корабля
+  // ----- ДВИЖЕНИЕ КОРАБЛЯ ПО КЛЕТКАМ (БЕЗ ТАЙМЕРА) -----
   function movePlayer(dx, dy) {
     // Горизонталь — обычное ограничение 0..GRID_COLS-1
     const newCol = player.col + dx;
@@ -170,50 +182,111 @@ window.addEventListener("DOMContentLoaded", () => {
     }
   }
 
-  // Клавиатура (стрелки + WASD)
-  window.addEventListener("keydown", (e) => {
-    const key = e.key;
+  // ----- ОГРАНИЧЕНИЕ ПО ВРЕМЕНИ МЕЖДУ ШАГАМИ -----
+  function handleMovement(now) {
+    // Если никуда не хотим двигаться — выходим
+    if (desiredDx === 0 && desiredDy === 0) return;
 
+    // Если ещё не прошло MOVE_DELAY мс — выходим
+    if (now - lastMoveTime < MOVE_DELAY) return;
+
+    // Делаем шаг
+    movePlayer(desiredDx, desiredDy);
+    lastMoveTime = now;
+  }
+
+  // ----- ВСПОМОГАТЕЛЬНЫЕ ФУНКЦИИ УПРАВЛЕНИЯ -----
+  function setDirection(dx, dy) {
+    desiredDx = dx;
+    desiredDy = dy;
+  }
+
+  function clearDirection() {
+    desiredDx = 0;
+    desiredDy = 0;
+  }
+
+  function setDirectionFromKey(key) {
     switch (key) {
       case "ArrowUp":
       case "w":
       case "W":
-        movePlayer(0, -1);
+        setDirection(0, -1);
         break;
 
       case "ArrowDown":
       case "s":
       case "S":
-        movePlayer(0, 1);
+        setDirection(0, 1);
         break;
 
       case "ArrowLeft":
       case "a":
       case "A":
-        movePlayer(-1, 0);
+        setDirection(-1, 0);
         break;
 
       case "ArrowRight":
       case "d":
       case "D":
-        movePlayer(1, 0);
+        setDirection(1, 0);
         break;
+
+      default:
+        // Не управляющая клавиша — игнорируем
+        break;
+    }
+  }
+
+  function isMovementKey(key) {
+    return [
+      "ArrowUp", "ArrowDown", "ArrowLeft", "ArrowRight",
+      "w", "W", "a", "A", "s", "S", "d", "D"
+    ].includes(key);
+  }
+
+  // ----- КЛАВИАТУРА (ПК) -----
+  window.addEventListener("keydown", (e) => {
+    setDirectionFromKey(e.key);
+  });
+
+  window.addEventListener("keyup", (e) => {
+    if (isMovementKey(e.key)) {
+      // Отпустили любую "ходовую" клавишу — останавливаемся
+      clearDirection();
     }
   });
 
-  // Кнопки на экране
+  // ----- КНОПКИ НА ЭКРАНЕ (ТЕЛЕФОН / ПК) -----
   const btnUp = document.getElementById("btn-up");
   const btnDown = document.getElementById("btn-down");
   const btnLeft = document.getElementById("btn-left");
   const btnRight = document.getElementById("btn-right");
 
-  if (btnUp && btnDown && btnLeft && btnRight) {
-    btnUp.addEventListener("click", () => movePlayer(0, -1));
-    btnDown.addEventListener("click", () => movePlayer(0, 1));
-    btnLeft.addEventListener("click", () => movePlayer(-1, 0));
-    btnRight.addEventListener("click", () => movePlayer(1, 0));
+  function attachButtonControls(btn, dx, dy) {
+    if (!btn) return;
+
+    btn.addEventListener("pointerdown", (e) => {
+      e.preventDefault();
+      setDirection(dx, dy);
+    });
+
+    // pointerup / pointerleave / pointercancel — чтобы при уходе пальца/мыши останавливались
+    const stop = (e) => {
+      e.preventDefault();
+      clearDirection();
+    };
+
+    btn.addEventListener("pointerup", stop);
+    btn.addEventListener("pointerleave", stop);
+    btn.addEventListener("pointercancel", stop);
   }
 
-  // Старт отрисовки
+  attachButtonControls(btnUp,    0, -1);
+  attachButtonControls(btnDown,  0,  1);
+  attachButtonControls(btnLeft, -1,  0);
+  attachButtonControls(btnRight, 1,  0);
+
+  // Старт анимации
   draw();
 });
