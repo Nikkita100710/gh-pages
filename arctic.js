@@ -1,10 +1,11 @@
+// Arctic Rescue — одиночный прототип.
 // Поле: 10 колонок, 12 рядов.
 // 0-й ряд: Северный полюс (белая полоса)
 // 11-й ряд: Континент (зелёная полоса)
 // Корабль ходит только по воде: ряды 1–10.
 //
 // Движение корабля: не чаще одного шага каждые MOVE_DELAY мс (200 мс).
-// Айсберги 1x1: ряды 2..9, движутся слева направо, шаг каждые 500 мс.
+// Айсберги 1x1 (строго внутри своей клетки): ряды 2..9, слева направо.
 // Белые медведи: бесконечный запас на полюсе, счётчик спасённых на континенте.
 // Раунд: 1 минута, по окончании — игра останавливается.
 
@@ -65,6 +66,46 @@ window.addEventListener("DOMContentLoaded", () => {
     player.row = GRID_ROWS - 2;
   }
 
+  // ----- УНИВЕРСАЛЬНЫЙ РИСОВАЛЬЩИК ГОЛОВЫ МЕДВЕДЯ -----
+  function drawBearHead(x, y, bodyRadius) {
+    const earRadius = bodyRadius * 0.4;
+
+    ctx.save();
+
+    ctx.fillStyle = "#ffffff";
+    ctx.strokeStyle = "rgba(0, 0, 60, 0.8)";
+    ctx.lineWidth = 2;
+
+    // Тело
+    ctx.beginPath();
+    ctx.arc(x, y, bodyRadius, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.stroke();
+
+    // Ушки
+    ctx.beginPath();
+    ctx.arc(x - bodyRadius * 0.6, y - bodyRadius * 0.6, earRadius, 0, Math.PI * 2);
+    ctx.arc(x + bodyRadius * 0.6, y - bodyRadius * 0.6, earRadius, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.stroke();
+
+    // Нос
+    ctx.fillStyle = "#333333";
+    ctx.beginPath();
+    ctx.arc(x, y + bodyRadius * 0.15, bodyRadius * 0.2, 0, Math.PI * 2);
+    ctx.fill();
+
+    // Глазки
+    ctx.beginPath();
+    const eyeOffsetX = bodyRadius * 0.35;
+    const eyeOffsetY = bodyRadius * 0.15;
+    ctx.arc(x - eyeOffsetX, y - eyeOffsetY, bodyRadius * 0.08, 0, Math.PI * 2);
+    ctx.arc(x + eyeOffsetX, y - eyeOffsetY, bodyRadius * 0.08, 0, Math.PI * 2);
+    ctx.fill();
+
+    ctx.restore();
+  }
+
   // ----- ОСНОВНОЙ ЦИКЛ ОТРИСОВКИ -----
   function draw() {
     const now = Date.now();
@@ -83,8 +124,8 @@ window.addEventListener("DOMContentLoaded", () => {
 
     // Океан с лёгким градиентом
     const oceanGradient = ctx.createLinearGradient(0, 0, 0, canvas.height);
-    oceanGradient.addColorStop(0, "#002b55");  // темнее сверху
-    oceanGradient.addColorStop(1, "#005080");  // чуть светлее снизу
+    oceanGradient.addColorStop(0, "#002b55");
+    oceanGradient.addColorStop(1, "#005080");
     ctx.fillStyle = oceanGradient;
     ctx.fillRect(0, 0, canvas.width, canvas.height);
 
@@ -188,46 +229,6 @@ window.addEventListener("DOMContentLoaded", () => {
       ctx.stroke();
     }
   }
-  // Универсальный рисовальщик головы белого медведя
-  function drawBearHead(x, y, bodyRadius) {
-    const earRadius = bodyRadius * 0.4;
-
-    ctx.save();
-
-    // Контур, чтобы мишка не сливался с фоном
-    ctx.fillStyle = "#ffffff";
-    ctx.strokeStyle = "rgba(0, 0, 60, 0.8)";
-    ctx.lineWidth = 2;
-
-    // Тело головы
-    ctx.beginPath();
-    ctx.arc(x, y, bodyRadius, 0, Math.PI * 2);
-    ctx.fill();
-    ctx.stroke();
-
-    // Ушки
-    ctx.beginPath();
-    ctx.arc(x - bodyRadius * 0.6, y - bodyRadius * 0.6, earRadius, 0, Math.PI * 2);
-    ctx.arc(x + bodyRadius * 0.6, y - bodyRadius * 0.6, earRadius, 0, Math.PI * 2);
-    ctx.fill();
-    ctx.stroke();
-
-    // Нос
-    ctx.fillStyle = "#333333";
-    ctx.beginPath();
-    ctx.arc(x, y + bodyRadius * 0.15, bodyRadius * 0.2, 0, Math.PI * 2);
-    ctx.fill();
-
-    // Глазки (очень маленькие точки)
-    ctx.beginPath();
-    const eyeOffsetX = bodyRadius * 0.35;
-    const eyeOffsetY = bodyRadius * 0.15;
-    ctx.arc(x - eyeOffsetX, y - eyeOffsetY, bodyRadius * 0.08, 0, Math.PI * 2);
-    ctx.arc(x + eyeOffsetX, y - eyeOffsetY, bodyRadius * 0.08, 0, Math.PI * 2);
-    ctx.fill();
-
-    ctx.restore();
-  }
 
   function drawPolarBears() {
     const bearsToDraw = 5;
@@ -242,45 +243,81 @@ window.addEventListener("DOMContentLoaded", () => {
     }
   }
 
-
-
-
   function drawPlayer() {
     const xCenter = player.col * cellWidth + cellWidth / 2;
     const yCenter = player.row * cellHeight + cellHeight / 2;
 
-    const shipWidth = cellWidth * 0.6;
-    const shipHeight = cellHeight * 0.6;
+    const hullWidth = cellWidth * 0.7;
+    const hullHeight = cellHeight * 0.5;
 
-    // Корабль (треугольник)
-    ctx.fillStyle = "#ffcc00";
+    ctx.save();
+
+    // Корпус корабля (трапеция с носом вверх)
+    ctx.fillStyle = "#ffd447";
+    ctx.strokeStyle = "#b8860b";
+    ctx.lineWidth = 2;
+
     ctx.beginPath();
-    // Нос вверх
-    ctx.moveTo(xCenter, yCenter - shipHeight / 2);
+    const bottomY = yCenter + hullHeight / 2;
+    const topY = yCenter - hullHeight / 2;
+    const leftX = xCenter - hullWidth / 2;
+    const rightX = xCenter + hullWidth / 2;
+
+    // Нос вверх (центр)
+    ctx.moveTo(xCenter, topY - hullHeight * 0.35);
+    // Левый верх борта
+    ctx.lineTo(leftX + hullWidth * 0.2, topY);
     // Левый низ
-    ctx.lineTo(xCenter - shipWidth / 2, yCenter + shipHeight / 2);
+    ctx.lineTo(leftX, bottomY);
     // Правый низ
-    ctx.lineTo(xCenter + shipWidth / 2, yCenter + shipHeight / 2);
+    ctx.lineTo(rightX, bottomY);
+    // Правый верх борта
+    ctx.lineTo(rightX - hullWidth * 0.2, topY);
     ctx.closePath();
     ctx.fill();
+    ctx.stroke();
 
-    // Если везём медведя — рисуем ту же голову, но поменьше
+    // Рубка (кабина) в середине
+    const cabinWidth = hullWidth * 0.35;
+    const cabinHeight = hullHeight * 0.4;
+    const cabinX = xCenter - cabinWidth / 2;
+    const cabinY = topY + hullHeight * 0.1;
+
+    ctx.fillStyle = "#ffffff";
+    ctx.beginPath();
+    ctx.roundRect(cabinX, cabinY, cabinWidth, cabinHeight, 4);
+    ctx.fill();
+    ctx.stroke();
+
+    // Окна рубки
+    ctx.fillStyle = "#2b5c99";
+    const windowRadius = cabinWidth * 0.08;
+    const winY = cabinY + cabinHeight * 0.4;
+    ctx.beginPath();
+    ctx.arc(cabinX + cabinWidth * 0.25, winY, windowRadius, 0, Math.PI * 2);
+    ctx.arc(cabinX + cabinWidth * 0.5,  winY, windowRadius, 0, Math.PI * 2);
+    ctx.arc(cabinX + cabinWidth * 0.75, winY, windowRadius, 0, Math.PI * 2);
+    ctx.fill();
+
+    // Если везём медведя — рисуем голову на палубе перед рубкой
     if (carryingBear) {
       const bearRadius = Math.min(cellWidth, cellHeight) * 0.16;
       const bearX = xCenter;
-      const bearY = yCenter - shipHeight * 0.05; // чуть выше центра корабля
+      const bearY = topY - hullHeight * 0.05;
       drawBearHead(bearX, bearY, bearRadius);
     }
 
+    ctx.restore();
 
     // Подпись корабля
     ctx.fillStyle = "#ffffff";
     ctx.font = "12px Segoe UI";
     ctx.textAlign = "center";
     ctx.textBaseline = "bottom";
-    ctx.fillText("Player", xCenter, yCenter - shipHeight / 2 - 2);
+    ctx.fillText("Player", xCenter, yCenter + hullHeight / 2 + 14);
   }
 
+  // Айсберги: 3 варианта формы, строго внутри своей клетки
   function drawIcebergs() {
     for (const iceberg of icebergs) {
       const x = iceberg.col * cellWidth;
@@ -294,28 +331,27 @@ window.addEventListener("DOMContentLoaded", () => {
       const midX   = (left + right) / 2;
 
       ctx.fillStyle = "#e0f7ff";
-
       ctx.beginPath();
 
       switch (iceberg.variant) {
         case 0:
-          // Классический "треугольный" айсберг (одна высокая вершина)
-          ctx.moveTo(left, bottom);
-          ctx.lineTo(left, (top + bottom) / 2);
-          ctx.lineTo(midX, top);
-          ctx.lineTo(right, (top + bottom) / 2);
+          // Классический треугольный айсберг
+          ctx.moveTo(left,  bottom);
+          ctx.lineTo(left,  top + (bottom - top) * 0.5);
+          ctx.lineTo(midX,  top);
+          ctx.lineTo(right, top + (bottom - top) * 0.5);
           ctx.lineTo(right, bottom);
           ctx.closePath();
           break;
 
         case 1:
-          // Широкий, низкий айсберг с двумя вершинами
-          ctx.moveTo(left, bottom);
-          ctx.lineTo(left, (top + bottom) * 0.6);
-          ctx.lineTo(midX - (cellWidth * 0.15), top + padding);
-          ctx.lineTo(midX, (top + bottom) * 0.55);
-          ctx.lineTo(midX + (cellWidth * 0.15), top + padding * 0.8);
-          ctx.lineTo(right, (top + bottom) * 0.6);
+          // Широкий низкий айсберг с двумя вершинами
+          ctx.moveTo(left,  bottom);
+          ctx.lineTo(left,  top + (bottom - top) * 0.6);
+          ctx.lineTo(left + (right - left) * 0.25, top + (bottom - top) * 0.25);
+          ctx.lineTo(midX,  top + (bottom - top) * 0.45);
+          ctx.lineTo(right - (right - left) * 0.25, top + (bottom - top) * 0.2);
+          ctx.lineTo(right, top + (bottom - top) * 0.6);
           ctx.lineTo(right, bottom);
           ctx.closePath();
           break;
@@ -324,11 +360,11 @@ window.addEventListener("DOMContentLoaded", () => {
         default:
           // "Рваный" айсберг с несколькими пиками
           ctx.moveTo(left, bottom);
-          ctx.lineTo(left, (top + bottom) * 0.65);
-          ctx.lineTo(left + (right - left) * 0.25, top + padding * 0.9);
-          ctx.lineTo(midX, top + padding * 0.4);
-          ctx.lineTo(right - (right - left) * 0.25, top + padding * 0.7);
-          ctx.lineTo(right, (top + bottom) * 0.65);
+          ctx.lineTo(left, top + (bottom - top) * 0.65);
+          ctx.lineTo(left + (right - left) * 0.2, top + (bottom - top) * 0.35);
+          ctx.lineTo(midX, top + (bottom - top) * 0.15);
+          ctx.lineTo(right - (right - left) * 0.2, top + (bottom - top) * 0.32);
+          ctx.lineTo(right, top + (bottom - top) * 0.65);
           ctx.lineTo(right, bottom);
           ctx.closePath();
           break;
@@ -336,13 +372,13 @@ window.addEventListener("DOMContentLoaded", () => {
 
       ctx.fill();
 
-      // Лёгкая "тень" под айсбергом
+      // Лёгкая "тень" под айсбергом (тоже в пределах клетки)
       ctx.fillStyle = "rgba(0, 0, 0, 0.15)";
       ctx.beginPath();
       ctx.ellipse(
         (left + right) / 2,
         bottom + 3,
-        (right - left) / 2,
+        (right - left) / 2.5,
         4,
         0,
         0,
@@ -399,7 +435,7 @@ window.addEventListener("DOMContentLoaded", () => {
     ctx.textAlign = "right";
     ctx.textBaseline = "top";
 
-    // Рисуем в правом верхнем углу, чуть ниже полюса
+    // В правом верхнем углу, чуть ниже полюса
     const x = canvas.width - 10;
     const y = northPoleRows * cellHeight + 10;
     ctx.fillText(text, x, y);
@@ -517,7 +553,7 @@ window.addEventListener("DOMContentLoaded", () => {
       Math.floor(Math.random() * (ICEBERG_MAX_ROW - ICEBERG_MIN_ROW + 1)) +
       ICEBERG_MIN_ROW;
 
-    const variant = Math.floor(Math.random() * 3); // 0, 1 или 2
+    const variant = Math.floor(Math.random() * 3); // 0,1,2 — форма айсберга
 
     icebergs.push({
       row,
@@ -525,7 +561,6 @@ window.addEventListener("DOMContentLoaded", () => {
       variant,
     });
   }
-
 
   function checkCollisionsWithIcebergs() {
     for (const iceberg of icebergs) {
