@@ -188,36 +188,61 @@ window.addEventListener("DOMContentLoaded", () => {
       ctx.stroke();
     }
   }
+  // Универсальный рисовальщик головы белого медведя
+  function drawBearHead(x, y, bodyRadius) {
+    const earRadius = bodyRadius * 0.4;
 
-function drawPolarBears() {
-  const bearsToDraw = 5;
-  const northHeight = northPoleRows * cellHeight;
-  const bodyY = northHeight * 0.7; // ниже текста
-  const bodyRadius = cellHeight * 0.18;
-  const earRadius = bodyRadius * 0.4;
+    ctx.save();
 
-  for (let i = 0; i < bearsToDraw; i++) {
-    const x = ((i + 1) * canvas.width) / (bearsToDraw + 1);
-
-    // Тело
+    // Контур, чтобы мишка не сливался с фоном
     ctx.fillStyle = "#ffffff";
+    ctx.strokeStyle = "rgba(0, 0, 60, 0.8)";
+    ctx.lineWidth = 2;
+
+    // Тело головы
     ctx.beginPath();
-    ctx.arc(x, bodyY, bodyRadius, 0, Math.PI * 2);
+    ctx.arc(x, y, bodyRadius, 0, Math.PI * 2);
     ctx.fill();
+    ctx.stroke();
 
     // Ушки
     ctx.beginPath();
-    ctx.arc(x - bodyRadius * 0.6, bodyY - bodyRadius * 0.6, earRadius, 0, Math.PI * 2);
-    ctx.arc(x + bodyRadius * 0.6, bodyY - bodyRadius * 0.6, earRadius, 0, Math.PI * 2);
+    ctx.arc(x - bodyRadius * 0.6, y - bodyRadius * 0.6, earRadius, 0, Math.PI * 2);
+    ctx.arc(x + bodyRadius * 0.6, y - bodyRadius * 0.6, earRadius, 0, Math.PI * 2);
     ctx.fill();
+    ctx.stroke();
 
-    // Нос/морда (маленькая тёмная точка)
+    // Нос
     ctx.fillStyle = "#333333";
     ctx.beginPath();
-    ctx.arc(x, bodyY + bodyRadius * 0.1, bodyRadius * 0.2, 0, Math.PI * 2);
+    ctx.arc(x, y + bodyRadius * 0.15, bodyRadius * 0.2, 0, Math.PI * 2);
     ctx.fill();
+
+    // Глазки (очень маленькие точки)
+    ctx.beginPath();
+    const eyeOffsetX = bodyRadius * 0.35;
+    const eyeOffsetY = bodyRadius * 0.15;
+    ctx.arc(x - eyeOffsetX, y - eyeOffsetY, bodyRadius * 0.08, 0, Math.PI * 2);
+    ctx.arc(x + eyeOffsetX, y - eyeOffsetY, bodyRadius * 0.08, 0, Math.PI * 2);
+    ctx.fill();
+
+    ctx.restore();
   }
-}
+
+  function drawPolarBears() {
+    const bearsToDraw = 5;
+    const northHeight = northPoleRows * cellHeight;
+    // Чуть ниже текста, ближе к нижней границе полосы
+    const y = northHeight * 0.7;
+    const bodyRadius = cellHeight * 0.18;
+
+    for (let i = 0; i < bearsToDraw; i++) {
+      const x = ((i + 1) * canvas.width) / (bearsToDraw + 1);
+      drawBearHead(x, y, bodyRadius);
+    }
+  }
+
+
 
 
   function drawPlayer() {
@@ -239,20 +264,14 @@ function drawPolarBears() {
     ctx.closePath();
     ctx.fill();
 
-    // Если везём медведя — рисуем белый кружок на корабле
+    // Если везём медведя — рисуем ту же голову, но поменьше
     if (carryingBear) {
-      const bearRadius = Math.min(cellWidth, cellHeight) * 0.18;
-      ctx.fillStyle = "#ffffff";
-      ctx.beginPath();
-      ctx.arc(
-        xCenter,
-        yCenter - shipHeight * 0.1, // чуть выше центра корабля
-        bearRadius,
-        0,
-        Math.PI * 2
-      );
-      ctx.fill();
+      const bearRadius = Math.min(cellWidth, cellHeight) * 0.16;
+      const bearX = xCenter;
+      const bearY = yCenter - shipHeight * 0.05; // чуть выше центра корабля
+      drawBearHead(bearX, bearY, bearRadius);
     }
+
 
     // Подпись корабля
     ctx.fillStyle = "#ffffff";
@@ -262,46 +281,76 @@ function drawPolarBears() {
     ctx.fillText("Player", xCenter, yCenter - shipHeight / 2 - 2);
   }
 
-function drawIcebergs() {
-  for (const iceberg of icebergs) {
-    const x = iceberg.col * cellWidth;
-    const y = iceberg.row * cellHeight;
+  function drawIcebergs() {
+    for (const iceberg of icebergs) {
+      const x = iceberg.col * cellWidth;
+      const y = iceberg.row * cellHeight;
 
-    const padding = 6;
-    const left   = x + padding;
-    const right  = x + cellWidth - padding;
-    const top    = y + padding;
-    const bottom = y + cellHeight - padding;
-    const midX   = (left + right) / 2;
+      const padding = 6;
+      const left   = x + padding;
+      const right  = x + cellWidth - padding;
+      const top    = y + padding;
+      const bottom = y + cellHeight - padding;
+      const midX   = (left + right) / 2;
 
-    // Тело айсберга — многоугольник с "ломаной" верхушкой
-    ctx.fillStyle = "#e0f7ff";
-    ctx.beginPath();
-    ctx.moveTo(left, bottom);
-    ctx.lineTo(left, (top + bottom) / 2);
-    ctx.lineTo(midX - (cellWidth * 0.1), top + padding / 2);
-    ctx.lineTo(midX + (cellWidth * 0.1), top);
-    ctx.lineTo(right, (top + bottom) / 2);
-    ctx.lineTo(right, bottom);
-    ctx.closePath();
-    ctx.fill();
+      ctx.fillStyle = "#e0f7ff";
 
-    // Лёгкая тень снизу
-    ctx.fillStyle = "rgba(0, 0, 0, 0.15)";
-    ctx.beginPath();
-    ctx.ellipse(
-      (left + right) / 2,
-      bottom + 3,
-      (right - left) / 2,
-      4,
-      0,
-      0,
-      Math.PI * 2
-    );
-    ctx.fill();
+      ctx.beginPath();
+
+      switch (iceberg.variant) {
+        case 0:
+          // Классический "треугольный" айсберг (одна высокая вершина)
+          ctx.moveTo(left, bottom);
+          ctx.lineTo(left, (top + bottom) / 2);
+          ctx.lineTo(midX, top);
+          ctx.lineTo(right, (top + bottom) / 2);
+          ctx.lineTo(right, bottom);
+          ctx.closePath();
+          break;
+
+        case 1:
+          // Широкий, низкий айсберг с двумя вершинами
+          ctx.moveTo(left, bottom);
+          ctx.lineTo(left, (top + bottom) * 0.6);
+          ctx.lineTo(midX - (cellWidth * 0.15), top + padding);
+          ctx.lineTo(midX, (top + bottom) * 0.55);
+          ctx.lineTo(midX + (cellWidth * 0.15), top + padding * 0.8);
+          ctx.lineTo(right, (top + bottom) * 0.6);
+          ctx.lineTo(right, bottom);
+          ctx.closePath();
+          break;
+
+        case 2:
+        default:
+          // "Рваный" айсберг с несколькими пиками
+          ctx.moveTo(left, bottom);
+          ctx.lineTo(left, (top + bottom) * 0.65);
+          ctx.lineTo(left + (right - left) * 0.25, top + padding * 0.9);
+          ctx.lineTo(midX, top + padding * 0.4);
+          ctx.lineTo(right - (right - left) * 0.25, top + padding * 0.7);
+          ctx.lineTo(right, (top + bottom) * 0.65);
+          ctx.lineTo(right, bottom);
+          ctx.closePath();
+          break;
+      }
+
+      ctx.fill();
+
+      // Лёгкая "тень" под айсбергом
+      ctx.fillStyle = "rgba(0, 0, 0, 0.15)";
+      ctx.beginPath();
+      ctx.ellipse(
+        (left + right) / 2,
+        bottom + 3,
+        (right - left) / 2,
+        4,
+        0,
+        0,
+        Math.PI * 2
+      );
+      ctx.fill();
+    }
   }
-}
-
 
   function drawScore() {
     // Пишем "Спасено: N" прямо на континенте, слева внизу зелёной полосы
@@ -468,11 +517,15 @@ function drawIcebergs() {
       Math.floor(Math.random() * (ICEBERG_MAX_ROW - ICEBERG_MIN_ROW + 1)) +
       ICEBERG_MIN_ROW;
 
+    const variant = Math.floor(Math.random() * 3); // 0, 1 или 2
+
     icebergs.push({
       row,
       col: 0, // начинаем слева
+      variant,
     });
   }
+
 
   function checkCollisionsWithIcebergs() {
     for (const iceberg of icebergs) {
