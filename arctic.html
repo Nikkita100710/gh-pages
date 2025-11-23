@@ -70,13 +70,13 @@
       display: flex;
       flex-direction: column;
       align-items: center;
-      gap: 2px;               /* было 4px – ряды стрелок ближе друг к другу */
+      gap: 0;               /* ряды ещё ближе друг к другу */
     }
 
     .controls-row {
       display: flex;
       justify-content: center;
-      gap: 40px;              /* было 24px – левую/правую стрелки раздвинули шире */
+      gap: 44px;            /* немного шире лево-право */
     }
 
     .control-btn {
@@ -546,7 +546,7 @@
           <div class="system-panel">
             <button id="btn-reset" class="sys-btn sys-btn-red">RESET</button>
             <button id="btn-sound" class="sys-btn sys-btn-green sys-btn-off">SOUND</button>
-            <button id="btn-pause" class="sys-btn sys-btn-green">PAUSE</button>
+            <button id="btn-pause" class="sys-btn sys-btn-green">START</button>
             <button id="btn-options" class="sys-btn sys-btn-yellow">OPTIONS</button>
           </div>
         </div>
