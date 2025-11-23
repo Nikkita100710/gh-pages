@@ -41,7 +41,6 @@
       border: 2px solid rgba(255, 255, 255, 0.2);
     }
 
-    /* Сам canvas фиксирован по пикселям, но сжимается по ширине */
     #gameCanvas {
       display: block;
       width: 100%;
@@ -50,33 +49,42 @@
       background: #002b55;
     }
 
-    /* Блок с кнопками управления */
+    /* НИЖНИЙ ПУЛЬТ: джойстик + системные кнопки */
+
     .controls {
-      margin-top: 16px;
+      margin-top: 12px;
       display: flex;
       flex-direction: column;
       align-items: center;
-      gap: 10px;
+      gap: 6px;
+    }
+
+    .controls-main {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      gap: 28px;
+    }
+
+    .dpad {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 4px;
     }
 
     .controls-row {
       display: flex;
       justify-content: center;
-      gap: 32px;
-    }
-
-    .controls-row.middle {
-      gap: 40px;
-      margin-top: 2px;
-      margin-bottom: 2px;
+      gap: 24px;
     }
 
     .control-btn {
-      width: 60px;
-      height: 60px;
+      width: 56px;
+      height: 56px;
       border-radius: 50%;
-      border: 2px solid rgba(255, 255, 255, 0.8);
-      background: transparent;
+      border: 2px solid rgba(255, 255, 255, 0.9);
+      background: radial-gradient(circle at 30% 30%, #ffe599 0%, #ffc000 40%, #c08000 100%);
       color: #ffffff;
       font-size: 26px;
       display: flex;
@@ -86,72 +94,88 @@
       transition: background 0.15s ease, transform 0.1s ease,
         box-shadow 0.15s ease;
       touch-action: manipulation;
+      text-shadow: 0 1px 2px rgba(0, 0, 0, 0.7);
+      box-shadow: 0 3px 0 #7a4d00, 0 0 0 1px rgba(0, 0, 0, 0.6);
     }
 
     .control-btn:hover {
-      background: rgba(255, 255, 255, 0.08);
-      box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.3);
+      background: radial-gradient(circle at 30% 30%, #fff2bf 0%, #ffd24a 40%, #c08000 100%);
+      box-shadow: 0 4px 0 #7a4d00, 0 0 0 1px rgba(255, 255, 255, 0.4);
     }
 
     .control-btn:active {
       transform: translateY(1px) scale(0.97);
-      box-shadow: none;
-      background: rgba(255, 255, 255, 0.18);
+      box-shadow: 0 1px 0 #7a4d00;
     }
 
     .control-btn span {
       pointer-events: none;
     }
 
+    /* Системные кнопки справа */
+
+    .system-panel {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .sys-btn {
+      min-width: 96px;
+      padding: 6px 14px;
+      border-radius: 999px;
+      border: none;
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      text-align: center;
+      box-shadow: 0 3px 0 rgba(0, 0, 0, 0.7), 0 0 0 1px rgba(0, 0, 0, 0.6);
+      text-shadow: 0 1px 1px rgba(255, 255, 255, 0.8);
+      transition: transform 0.1s ease, box-shadow 0.1s ease,
+        filter 0.1s ease, background 0.15s ease;
+    }
+
+    .sys-btn:active {
+      transform: translateY(1px);
+      box-shadow: 0 1px 0 rgba(0, 0, 0, 0.7);
+    }
+
+    .sys-btn-red {
+      background: linear-gradient(#ff6666, #d00000);
+      color: #220000;
+    }
+
+    .sys-btn-green {
+      background: linear-gradient(#a6ff7a, #2f9e00);
+      color: #003300;
+    }
+
+    .sys-btn-yellow {
+      background: linear-gradient(#ffe27a, #ffb000);
+      color: #402200;
+    }
+
+    .sys-btn-off {
+      filter: grayscale(0.7) brightness(0.85);
+    }
+
     .hint {
-      margin-top: 6px;
+      margin-top: 2px;
       font-size: 12px;
       text-align: center;
       opacity: 0.9;
     }
 
-    .meta-buttons {
-      margin-top: 4px;
-      display: flex;
-      flex-wrap: wrap;
-      justify-content: center;
-      gap: 8px;
-    }
-
-    .meta-btn {
-      border: none;
-      border-radius: 999px;
-      padding: 6px 12px;
-      font-size: 13px;
-      cursor: pointer;
-      background: #123b66;
-      color: #ffffff;
-      box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.25);
-      transition: background 0.15s ease, transform 0.1s ease,
-        box-shadow 0.15s ease;
-    }
-
-    .meta-btn:hover {
-      background: #195187;
-      box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.3);
-    }
-
-    .meta-btn:active {
-      transform: translateY(1px) scale(0.97);
-      box-shadow: none;
-    }
-
-    /* ВСТУПИТЕЛЬНОЕ ОКНО-ИНСТРУКЦИЯ */
+    /* ВСТУПИТЕЛЬНАЯ ИНСТРУКЦИЯ (теперь открывается ТОЛЬКО из About->More) */
 
     .intro-overlay {
       position: fixed;
       inset: 0;
       background: rgba(0, 0, 0, 0.7);
-      display: flex;
+      display: none; /* ВАЖНО: по умолчанию скрыто */
       justify-content: center;
       align-items: center;
       z-index: 1000;
-
       padding: 16px;
       overflow-y: auto;
     }
@@ -166,7 +190,6 @@
       box-shadow: 0 12px 35px rgba(0, 0, 0, 0.6);
       font-family: "Segoe UI", system-ui, sans-serif;
       line-height: 1.4;
-
       max-height: 100vh;
       overflow-y: auto;
     }
@@ -233,7 +256,7 @@
       position: fixed;
       inset: 0;
       background: rgba(0, 0, 0, 0.75);
-      display: flex;
+      display: none;
       justify-content: center;
       align-items: center;
       z-index: 1100;
@@ -365,15 +388,20 @@
         padding: 10px 8px 14px;
       }
 
+      .controls-main {
+        gap: 18px;
+      }
+
       .control-btn {
         width: 52px;
         height: 52px;
         font-size: 22px;
       }
 
-      .meta-btn {
+      .sys-btn {
+        min-width: 84px;
         font-size: 12px;
-        padding: 6px 10px;
+        padding: 5px 10px;
       }
 
       .intro-window {
@@ -386,7 +414,7 @@
       }
 
       .intro-window h2 {
-        font-size: 16px;
+        font-size  : 16px;
       }
 
       .intro-start-btn {
@@ -410,7 +438,7 @@
   </style>
 </head>
 <body>
-  <!-- ВСТУПИТЕЛЬНАЯ ИНСТРУКЦИЯ -->
+  <!-- ИНСТРУКЦИЯ: теперь только через ABOUT->More -->
   <div id="intro" class="intro-overlay">
     <div class="intro-window">
       <h1>Arctic Rescue — спасаем белых медведей</h1>
@@ -441,27 +469,24 @@
       </ul>
 
       <p class="intro-note">
-        Когда будешь готов — нажми кнопку ниже. Таймер 1&nbsp;минута стартует
-        сразу после начала игры.
+        Ты можешь закрыть эту подсказку и вернуться к игре в любой момент.
       </p>
 
       <button id="startButton" class="intro-start-btn">
-        Начать спасательную миссию
+        Продолжить игру
       </button>
     </div>
   </div>
 
   <!-- ABOUT ОКНО -->
-  <div id="aboutOverlay" class="about-overlay" style="display: none;">
+  <div id="aboutOverlay" class="about-overlay">
     <div class="about-window">
-      <!-- Верхние вкладки -->
       <div class="about-tabs">
         <button class="about-tab disabled">OPTIONS</button>
         <button class="about-tab disabled">SCORES</button>
         <button class="about-tab active">ABOUT</button>
       </div>
 
-      <!-- Карточка с айсбергом -->
       <div class="about-content">
         <div class="about-image-wrapper">
           <img src="iceberg-about-720x404.jpg" alt="Arctic iceberg" class="about-image" />
@@ -472,7 +497,6 @@
           Created by M. Kadantsev
         </p>
 
-        <!-- Кнопки внутри ABOUT -->
         <div class="about-buttons">
           <button class="about-btn">Feedback</button>
           <button class="about-btn">Rate us</button>
@@ -495,42 +519,41 @@
       </div>
 
       <div class="controls">
-        <div class="controls-row">
-          <button id="btn-up" class="control-btn">
-            <span>▲</span>
-          </button>
-        </div>
+        <div class="controls-main">
+          <!-- Джойстик -->
+          <div class="dpad">
+            <div class="controls-row">
+              <button id="btn-up" class="control-btn">
+                <span>▲</span>
+              </button>
+            </div>
+            <div class="controls-row">
+              <button id="btn-left" class="control-btn">
+                <span>◀</span>
+              </button>
+              <button id="btn-right" class="control-btn">
+                <span>▶</span>
+              </button>
+            </div>
+            <div class="controls-row">
+              <button id="btn-down" class="control-btn">
+                <span>▼</span>
+              </button>
+            </div>
+          </div>
 
-        <div class="controls-row middle">
-          <button id="btn-left" class="control-btn">
-            <span>◀</span>
-          </button>
-          <button id="btn-right" class="control-btn">
-            <span>▶</span>
-          </button>
-        </div>
-
-        <div class="controls-row">
-          <button id="btn-down" class="control-btn">
-            <span>▼</span>
-          </button>
+          <!-- Системные кнопки -->
+          <div class="system-panel">
+            <button id="btn-reset" class="sys-btn sys-btn-red">RESET</button>
+            <button id="btn-sound" class="sys-btn sys-btn-green sys-btn-off">SOUND</button>
+            <button id="btn-pause" class="sys-btn sys-btn-green">PAUSE</button>
+            <button id="btn-options" class="sys-btn sys-btn-yellow">OPTIONS</button>
+          </div>
         </div>
 
         <p class="hint">
-          Управление: стрелки / WASD на клавиатуре (ПК) или кнопки ниже (телефон).
+          Управление: стрелки / WASD на клавиатуре (ПК) или жёлтые кнопки ниже (телефон).
         </p>
-
-        <div class="meta-buttons">
-          <button id="btn-restart" class="meta-btn">
-            ⟳ Начать сначала
-          </button>
-          <button id="btn-intro" class="meta-btn">
-            ❔ Показать инструкцию
-          </button>
-          <button id="btn-about" class="meta-btn">
-            ℹ About
-          </button>
-        </div>
       </div>
     </main>
   </div>
