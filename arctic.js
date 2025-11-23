@@ -176,28 +176,38 @@ window.addEventListener("DOMContentLoaded", () => {
     requestAnimationFrame(draw);
   }
 
-  function drawPoleLabels() {
-    const northHeight = northPoleRows * cellHeight;
-    const northTextY = northHeight * 0.3;
+function drawPoleLabels() {
+  const northHeight = northPoleRows * cellHeight;
 
-    // Северный полюс
-    ctx.fillStyle = "#003366";
-    ctx.font = "16px Segoe UI";
-    ctx.textAlign = "center";
-    ctx.textBaseline = "middle";
-    ctx.fillText("Северный полюс — белые медведи", canvas.width / 2, northTextY);
+  // ОДНА строка в верхней белой полосе
+  const textY = northHeight * 0.35; // чуть ниже верхнего края
 
-    // Континент
-    const bandTop = canvas.height - continentRows * cellHeight;
-    const bandHeight = continentRows * cellHeight;
-    const continentTextY = bandTop + bandHeight * 0.3;
+  ctx.textBaseline = "middle";
 
-    ctx.fillStyle = "#ffffff";
-    ctx.font = "16px Segoe UI";
-    ctx.textAlign = "center";
-    ctx.textBaseline = "middle";
-    ctx.fillText("Континент", canvas.width / 2, continentTextY);
-  }
+  // 1) Слева — яркое название игры
+  ctx.fillStyle = "#ffdd55"; // светло-жёлтый / можно подобрать
+  ctx.font = "bold 20px Segoe UI";
+  ctx.textAlign = "left";
+  ctx.fillText("Arctic Rescue", 12, textY);
+
+  // 2) По центру — подпись про Северный полюс
+  ctx.fillStyle = "#003366";
+  ctx.font = "16px Segoe UI";
+  ctx.textAlign = "center";
+  ctx.fillText("Северный полюс — белые медведи", canvas.width / 2, textY);
+
+  // ----- НИЖНЯЯ ЗЕЛЁНАЯ ПОЛОСА (КОНТИНЕНТ) -----
+  const bandTop = canvas.height - continentRows * cellHeight;
+  const bandHeight = continentRows * cellHeight;
+  const continentTextY = bandTop + bandHeight * 0.3;
+
+  ctx.fillStyle = "#ffffff";
+  ctx.font = "16px Segoe UI";
+  ctx.textAlign = "center";
+  ctx.textBaseline = "middle";
+  ctx.fillText("Континент", canvas.width / 2, continentTextY);
+}
+
 
   function drawGrid() {
     ctx.strokeStyle = "rgba(255,255,255,0.2)";
@@ -640,6 +650,27 @@ window.addEventListener("DOMContentLoaded", () => {
     startButton.addEventListener("click", () => {
       intro.style.display = "none";
       startGame();
+    });
+  }
+    // ----- КНОПКИ "НАЧАТЬ СНАЧАЛА" И "ИНСТРУКЦИЯ" -----
+  const restartButton = document.getElementById("btn-restart");
+  const showIntroButton = document.getElementById("btn-intro");
+
+  // Начать новый раунд (без перезагрузки страницы)
+  if (restartButton) {
+    restartButton.addEventListener("click", () => {
+      if (intro) intro.style.display = "none"; // на всякий случай скрываем инструкцию
+      startGame(); // внутри startGame делается resetGameState и запускается таймер
+    });
+  }
+
+  // Показать инструкцию и поставить игру на паузу
+  if (showIntroButton && intro) {
+    showIntroButton.addEventListener("click", () => {
+      gameStarted = false;  // останавливаем движение и таймер
+      gameOver = false;     // убираем состояние "конец игры"
+      clearDirection();     // корабль перестаёт двигаться
+      intro.style.display = "flex"; // снова показываем окно-инструкцию
     });
   }
 
