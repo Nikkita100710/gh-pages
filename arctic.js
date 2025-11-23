@@ -193,7 +193,7 @@ function drawPoleLabels() {
   ctx.textBaseline = "middle";
 
   // 1) Слева — яркое название игры
-  ctx.fillStyle = "#ffdd55"; // светло-жёлтый / можно подобрать
+  ctx.fillStyle = "#cc7a00"; // тёмно-оранжевый, хорошо виден на белом
   ctx.font = "bold 20px Segoe UI";
   ctx.textAlign = "left";
   ctx.fillText("Arctic Rescue", 12, textY);
