@@ -31,14 +31,8 @@
     .game-card {
       background: radial-gradient(circle at top, #123b66 0%, #061629 50%, #020b18 100%);
       border-radius: 16px;
-      padding: 16px 16px 20px;
+      padding: 12px 12px 18px;
       box-shadow: 0 16px 40px rgba(0, 0, 0, 0.7);
-    }
-
-    .game-title {
-      text-align: center;
-      font-size: 20px;
-      margin-bottom: 10px;
     }
 
     .canvas-wrapper {
@@ -47,7 +41,7 @@
       border: 2px solid rgba(255, 255, 255, 0.2);
     }
 
-    /* Сам canvas фиксирован по пикселям, но сжимается по ширине экрана */
+    /* Сам canvas фиксирован по пикселям, но сжимается по ширине */
     #gameCanvas {
       display: block;
       width: 100%;
@@ -58,7 +52,7 @@
 
     /* Блок с кнопками управления */
     .controls {
-      margin-top: 18px;
+      margin-top: 16px;
       display: flex;
       flex-direction: column;
       align-items: center;
@@ -73,7 +67,8 @@
 
     .controls-row.middle {
       gap: 40px;
-      margin-top: 4px;
+      margin-top: 2px;
+      margin-bottom: 2px;
     }
 
     .control-btn {
@@ -109,10 +104,41 @@
     }
 
     .hint {
-      margin-top: 8px;
+      margin-top: 6px;
       font-size: 12px;
       text-align: center;
       opacity: 0.9;
+    }
+
+    .meta-buttons {
+      margin-top: 4px;
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 8px;
+    }
+
+    .meta-btn {
+      border: none;
+      border-radius: 999px;
+      padding: 6px 12px;
+      font-size: 13px;
+      cursor: pointer;
+      background: #123b66;
+      color: #ffffff;
+      box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.25);
+      transition: background 0.15s ease, transform 0.1s ease,
+        box-shadow 0.15s ease;
+    }
+
+    .meta-btn:hover {
+      background: #195187;
+      box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.3);
+    }
+
+    .meta-btn:active {
+      transform: translateY(1px) scale(0.97);
+      box-shadow: none;
     }
 
     /* ВСТУПИТЕЛЬНОЕ ОКНО-ИНСТРУКЦИЯ */
@@ -126,7 +152,6 @@
       align-items: center;
       z-index: 1000;
 
-      /* чтобы на маленьких экранах всю карточку можно было прокрутить */
       padding: 16px;
       overflow-y: auto;
     }
@@ -142,7 +167,6 @@
       font-family: "Segoe UI", system-ui, sans-serif;
       line-height: 1.4;
 
-      /* не даём окну быть выше экрана, внутри него можно прокрутить текст */
       max-height: 100vh;
       overflow-y: auto;
     }
@@ -203,20 +227,153 @@
       box-shadow: none;
     }
 
-    /* Адаптация под узкие экраны */
+    /* ABOUT overlay */
+
+    .about-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.75);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      z-index: 1100;
+      padding: 16px;
+      overflow-y: auto;
+    }
+
+    .about-window {
+      background: #082135;
+      border-radius: 18px;
+      box-shadow: 0 18px 40px rgba(0, 0, 0, 0.8);
+      width: 100%;
+      max-width: 520px;
+      overflow: hidden;
+      font-family: "Segoe UI", system-ui, sans-serif;
+    }
+
+    .about-tabs {
+      display: flex;
+      width: 100%;
+      background: #0b2740;
+    }
+
+    .about-tab {
+      flex: 1;
+      padding: 8px 0;
+      border: none;
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      color: #1a2633;
+      background: linear-gradient(#ffd24a, #ffb000);
+      border-right: 1px solid rgba(0, 0, 0, 0.3);
+      text-shadow: 0 1px 2px rgba(0, 0, 0, 0.4);
+    }
+
+    .about-tab:last-child {
+      border-right: none;
+    }
+
+    .about-tab.active {
+      background: linear-gradient(#ffe27a, #ffc233);
+    }
+
+    .about-tab.disabled {
+      opacity: 0.5;
+      cursor: default;
+    }
+
+    .about-content {
+      padding: 16px 18px 18px;
+      text-align: center;
+    }
+
+    .about-image-wrapper {
+      background: #020b18;
+      border-radius: 12px;
+      padding: 10px;
+      border: 2px solid #f5a623;
+      margin-bottom: 10px;
+    }
+
+    .about-image {
+      display: block;
+      width: 100%;
+      height: auto;
+      border-radius: 6px;
+    }
+
+    .about-copy {
+      margin-top: 4px;
+      margin-bottom: 10px;
+      font-size: 13px;
+      color: #ffdd66;
+      text-shadow: 0 1px 2px rgba(0, 0, 0, 0.6);
+    }
+
+    .about-buttons {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 8px;
+      margin-top: 4px;
+    }
+
+    .about-btn {
+      border: none;
+      border-radius: 999px;
+      padding: 8px 0;
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      background: linear-gradient(#ffd24a, #ffb000);
+      color: #1a2633;
+      box-shadow: 0 3px 0 #a86d00, 0 0 0 1px rgba(0, 0, 0, 0.5);
+      text-shadow: 0 1px 1px rgba(255, 255, 255, 0.6);
+      transition: transform 0.1s ease, box-shadow 0.1s ease;
+    }
+
+    .about-btn:active {
+      transform: translateY(1px);
+      box-shadow: 0 1px 0 #a86d00;
+    }
+
+    .about-ok-wrapper {
+      margin-top: 10px;
+    }
+
+    .about-ok-btn {
+      border: none;
+      border-radius: 999px;
+      padding: 8px 30px;
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      background: linear-gradient(#ffd24a, #ffb000);
+      color: #1a2633;
+      box-shadow: 0 3px 0 #a86d00, 0 0 0 1px rgba(0, 0, 0, 0.6);
+      text-shadow: 0 1px 1px rgba(255, 255, 255, 0.7);
+      transition: transform 0.1s ease, box-shadow 0.1s ease;
+    }
+
+    .about-ok-btn:active {
+      transform: translateY(1px);
+      box-shadow: 0 1px 0 #a86d00;
+    }
+
     @media (max-width: 480px) {
       .game-card {
-        padding: 12px 10px 16px;
-      }
-
-      .game-title {
-        font-size: 18px;
+        padding: 10px 8px 14px;
       }
 
       .control-btn {
         width: 52px;
         height: 52px;
         font-size: 22px;
+      }
+
+      .meta-btn {
+        font-size: 12px;
+        padding: 6px 10px;
       }
 
       .intro-window {
@@ -236,44 +393,19 @@
         font-size: 14px;
         padding: 8px 0;
       }
-          .meta-buttons {
-      margin-top: 6px;
-      display: flex;
-      flex-wrap: wrap;
-      justify-content: center;
-      gap: 8px;
-    }
 
-    .meta-btn {
-      border: none;
-      border-radius: 999px;
-      padding: 6px 12px;
-      font-size: 13px;
-      cursor: pointer;
-      background: #123b66;
-      color: #ffffff;
-      box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.25);
-      transition: background 0.15s ease, transform 0.1s ease,
-        box-shadow 0.15s ease;
-    }
-
-    .meta-btn:hover {
-      background: #195187;
-      box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.3);
-    }
-
-    .meta-btn:active {
-      transform: translateY(1px) scale(0.97);
-      box-shadow: none;
-    }
-
-    @media (max-width: 480px) {
-      .meta-btn {
-        font-size: 12px;
-        padding: 6px 10px;
+      .about-window {
+        max-width: 100%;
       }
-    }
 
+      .about-btn {
+        font-size: 12px;
+      }
+
+      .about-ok-btn {
+        font-size: 13px;
+        padding: 8px 22px;
+      }
     }
   </style>
 </head>
@@ -319,10 +451,46 @@
     </div>
   </div>
 
+  <!-- ABOUT ОКНО -->
+  <div id="aboutOverlay" class="about-overlay" style="display: none;">
+    <div class="about-window">
+      <!-- Верхние вкладки -->
+      <div class="about-tabs">
+        <button class="about-tab disabled">OPTIONS</button>
+        <button class="about-tab disabled">SCORES</button>
+        <button class="about-tab active">ABOUT</button>
+      </div>
+
+      <!-- Карточка с айсбергом -->
+      <div class="about-content">
+        <div class="about-image-wrapper">
+          <img src="iceberg-about-720x404.jpg" alt="Arctic iceberg" class="about-image" />
+        </div>
+
+        <p class="about-copy">
+          © 2025 MK Game Studio<br />
+          Created by M. Kadantsev
+        </p>
+
+        <!-- Кнопки внутри ABOUT -->
+        <div class="about-buttons">
+          <button class="about-btn">Feedback</button>
+          <button class="about-btn">Rate us</button>
+          <button class="about-btn">Tell</button>
+          <button id="aboutMoreBtn" class="about-btn">More</button>
+        </div>
+
+        <div class="about-ok-wrapper">
+          <button id="aboutOkBtn" class="about-ok-btn">OK</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
   <!-- ОСНОВНОЙ ЭКРАН ИГРЫ -->
   <div class="page">
     <main class="game-card">
-         <div class="canvas-wrapper">
+      <div class="canvas-wrapper">
         <canvas id="gameCanvas" width="600" height="720"></canvas>
       </div>
 
@@ -351,15 +519,18 @@
         <p class="hint">
           Управление: стрелки / WASD на клавиатуре (ПК) или кнопки ниже (телефон).
         </p>
-                <div class="meta-buttons">
+
+        <div class="meta-buttons">
           <button id="btn-restart" class="meta-btn">
             ⟳ Начать сначала
           </button>
           <button id="btn-intro" class="meta-btn">
             ❔ Показать инструкцию
           </button>
+          <button id="btn-about" class="meta-btn">
+            ℹ About
+          </button>
         </div>
-
       </div>
     </main>
   </div>
