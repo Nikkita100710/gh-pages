@@ -42,6 +42,9 @@ window.addEventListener("DOMContentLoaded", () => {
   let desiredDy = 0;
   let facingDx = 0;
   let facingDy = -1;
+    // направление последнего сделанного шага (для поворота без движения)
+  let lastStepDx = 0;
+  let lastStepDy = 0;
 
   const player = {
     col: Math.floor(GRID_COLS / 2),
@@ -79,6 +82,11 @@ window.addEventListener("DOMContentLoaded", () => {
     resetPlayerPosition();
     clearDirection();
     gameOver = false;
+    
+    // сбрасываем направление последнего шага
+    lastStepDx = 0;
+    lastStepDy = 0;
+    lastMoveTime = 0;
   }
 
   function startGame() {
@@ -500,11 +508,22 @@ function drawPoleLabels() {
 
   function handleMovement(now) {
     if (desiredDx === 0 && desiredDy === 0) return;
+
+    // Если только что сменили направление — сначала только поворачиваем,
+    // без шага. Шаг начнётся со следующего цикла.
+    if (desiredDx !== lastStepDx || desiredDy !== lastStepDy) {
+      lastStepDx = desiredDx;
+      lastStepDy = desiredDy;
+      lastMoveTime = now; // запоминаем время, но не двигаемся
+      return;
+    }
+
     if (now - lastMoveTime < MOVE_DELAY) return;
 
     movePlayer(desiredDx, desiredDy);
     lastMoveTime = now;
   }
+
 
   // ----- АЙСБЕРГИ -----
   function handleIcebergs(now) {
