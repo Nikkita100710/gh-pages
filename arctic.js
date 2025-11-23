@@ -1,4 +1,4 @@
-// Arctic Rescue — одиночный прототип с экраном-инструкцией.
+// Arctic Rescue — одиночный прототип с интро и окном About.
 // Поле: 10 колонок, 12 рядов (0 — полюс, 11 — континент).
 
 window.addEventListener("DOMContentLoaded", () => {
@@ -36,19 +36,20 @@ window.addEventListener("DOMContentLoaded", () => {
   let gameStarted = false; // стартуем только после кнопки
 
   // ----- ДВИЖЕНИЕ КОРАБЛЯ -----
-  const MOVE_DELAY = 200;
+  const MOVE_DELAY = 200; // шаг не чаще, чем раз в 200 мс
   let lastMoveTime = 0;
   let desiredDx = 0;
   let desiredDy = 0;
   let facingDx = 0;
   let facingDy = -1;
-    // направление последнего сделанного шага (для поворота без движения)
+
+  // направление последнего сделанного шага
   let lastStepDx = 0;
   let lastStepDy = 0;
 
   const player = {
     col: Math.floor(GRID_COLS / 2),
-    row: GRID_ROWS - 2, // над континентом
+    row: GRID_ROWS - 2, // над континентом (10)
   };
 
   // ----- АЙСБЕРГИ -----
@@ -82,8 +83,7 @@ window.addEventListener("DOMContentLoaded", () => {
     resetPlayerPosition();
     clearDirection();
     gameOver = false;
-    
-    // сбрасываем направление последнего шага
+
     lastStepDx = 0;
     lastStepDy = 0;
     lastMoveTime = 0;
@@ -184,38 +184,36 @@ window.addEventListener("DOMContentLoaded", () => {
     requestAnimationFrame(draw);
   }
 
-function drawPoleLabels() {
-  const northHeight = northPoleRows * cellHeight;
+  function drawPoleLabels() {
+    const northHeight = northPoleRows * cellHeight;
 
-  // ОДНА строка в верхней белой полосе
-  const textY = northHeight * 0.35; // чуть ниже верхнего края
+    const textY = northHeight * 0.35;
 
-  ctx.textBaseline = "middle";
+    ctx.textBaseline = "middle";
 
-  // 1) Слева — яркое название игры
-  ctx.fillStyle = "#cc7a00"; // тёмно-оранжевый, хорошо виден на белом
-  ctx.font = "bold 20px Segoe UI";
-  ctx.textAlign = "left";
-  ctx.fillText("Arctic Rescue", 12, textY);
+    // Название игры — слева, тёмно-оранжевым
+    ctx.fillStyle = "#cc7a00";
+    ctx.font = "bold 20px Segoe UI";
+    ctx.textAlign = "left";
+    ctx.fillText("Arctic Rescue", 12, textY);
 
-  // 2) По центру — подпись про Северный полюс
-  ctx.fillStyle = "#003366";
-  ctx.font = "16px Segoe UI";
-  ctx.textAlign = "center";
-  ctx.fillText("Северный полюс — белые медведи", canvas.width / 2, textY);
+    // Подпись про Северный полюс — по центру
+    ctx.fillStyle = "#003366";
+    ctx.font = "16px Segoe UI";
+    ctx.textAlign = "center";
+    ctx.fillText("Северный полюс — белые медведи", canvas.width / 2, textY);
 
-  // ----- НИЖНЯЯ ЗЕЛЁНАЯ ПОЛОСА (КОНТИНЕНТ) -----
-  const bandTop = canvas.height - continentRows * cellHeight;
-  const bandHeight = continentRows * cellHeight;
-  const continentTextY = bandTop + bandHeight * 0.3;
+    // Континент
+    const bandTop = canvas.height - continentRows * cellHeight;
+    const bandHeight = continentRows * cellHeight;
+    const continentTextY = bandTop + bandHeight * 0.3;
 
-  ctx.fillStyle = "#ffffff";
-  ctx.font = "16px Segoe UI";
-  ctx.textAlign = "center";
-  ctx.textBaseline = "middle";
-  ctx.fillText("Континент", canvas.width / 2, continentTextY);
-}
-
+    ctx.fillStyle = "#ffffff";
+    ctx.font = "16px Segoe UI";
+    ctx.textAlign = "center";
+    ctx.textBaseline = "middle";
+    ctx.fillText("Континент", canvas.width / 2, continentTextY);
+  }
 
   function drawGrid() {
     ctx.strokeStyle = "rgba(255,255,255,0.2)";
@@ -254,7 +252,7 @@ function drawPoleLabels() {
     const xCenter = player.col * cellWidth + cellWidth / 2;
     const yCenter = player.row * cellHeight + cellHeight / 2;
 
-    const hullHeight = cellHeight * 0.5; // для подписи
+    const hullHeight = cellHeight * 0.5;
 
     // Угол по направлению
     let angle = 0;
@@ -337,29 +335,29 @@ function drawPoleLabels() {
       const y = iceberg.row * cellHeight;
 
       const padding = 6;
-      const left   = x + padding;
-      const right  = x + cellWidth - padding;
-      const top    = y + padding;
+      const left = x + padding;
+      const right = x + cellWidth - padding;
+      const top = y + padding;
       const bottom = y + cellHeight - padding;
-      const midX   = (left + right) / 2;
+      const midX = (left + right) / 2;
 
       ctx.fillStyle = "#e0f7ff";
       ctx.beginPath();
 
       switch (iceberg.variant) {
         case 0:
-          ctx.moveTo(left,  bottom);
-          ctx.lineTo(left,  top + (bottom - top) * 0.5);
-          ctx.lineTo(midX,  top);
+          ctx.moveTo(left, bottom);
+          ctx.lineTo(left, top + (bottom - top) * 0.5);
+          ctx.lineTo(midX, top);
           ctx.lineTo(right, top + (bottom - top) * 0.5);
           ctx.lineTo(right, bottom);
           ctx.closePath();
           break;
         case 1:
-          ctx.moveTo(left,  bottom);
-          ctx.lineTo(left,  top + (bottom - top) * 0.6);
+          ctx.moveTo(left, bottom);
+          ctx.lineTo(left, top + (bottom - top) * 0.6);
           ctx.lineTo(left + (right - left) * 0.25, top + (bottom - top) * 0.25);
-          ctx.lineTo(midX,  top + (bottom - top) * 0.45);
+          ctx.lineTo(midX, top + (bottom - top) * 0.45);
           ctx.lineTo(right - (right - left) * 0.25, top + (bottom - top) * 0.2);
           ctx.lineTo(right, top + (bottom - top) * 0.6);
           ctx.lineTo(right, bottom);
@@ -509,12 +507,11 @@ function drawPoleLabels() {
   function handleMovement(now) {
     if (desiredDx === 0 && desiredDy === 0) return;
 
-    // Если только что сменили направление — сначала только поворачиваем,
-    // без шага. Шаг начнётся со следующего цикла.
+    // при смене направления сначала только поворачиваем
     if (desiredDx !== lastStepDx || desiredDy !== lastStepDy) {
       lastStepDx = desiredDx;
       lastStepDy = desiredDy;
-      lastMoveTime = now; // запоминаем время, но не двигаемся
+      lastMoveTime = now;
       return;
     }
 
@@ -523,7 +520,6 @@ function drawPoleLabels() {
     movePlayer(desiredDx, desiredDy);
     lastMoveTime = now;
   }
-
 
   // ----- АЙСБЕРГИ -----
   function handleIcebergs(now) {
@@ -656,12 +652,12 @@ function drawPoleLabels() {
     btn.addEventListener("pointercancel", stop);
   }
 
-  attachButtonControls(btnUp,    0, -1);
-  attachButtonControls(btnDown,  0,  1);
-  attachButtonControls(btnLeft, -1,  0);
-  attachButtonControls(btnRight, 1,  0);
+  attachButtonControls(btnUp, 0, -1);
+  attachButtonControls(btnDown, 0, 1);
+  attachButtonControls(btnLeft, -1, 0);
+  attachButtonControls(btnRight, 1, 0);
 
-  // ----- КНОПКА "НАЧАТЬ СПАСАТЕЛЬНУЮ МИССИЮ" -----
+  // ----- РАБОТА С ОКНАМИ INTRO и ABOUT -----
   const intro = document.getElementById("intro");
   const startButton = document.getElementById("startButton");
 
@@ -671,29 +667,61 @@ function drawPoleLabels() {
       startGame();
     });
   }
-    // ----- КНОПКИ "НАЧАТЬ СНАЧАЛА" И "ИНСТРУКЦИЯ" -----
+
+  // Кнопки внизу: restart / intro / about
   const restartButton = document.getElementById("btn-restart");
   const showIntroButton = document.getElementById("btn-intro");
+  const showAboutButton = document.getElementById("btn-about");
 
-  // Начать новый раунд (без перезагрузки страницы)
   if (restartButton) {
     restartButton.addEventListener("click", () => {
-      if (intro) intro.style.display = "none"; // на всякий случай скрываем инструкцию
-      startGame(); // внутри startGame делается resetGameState и запускается таймер
+      if (intro) intro.style.display = "none";
+      const aboutOverlay = document.getElementById("aboutOverlay");
+      if (aboutOverlay) aboutOverlay.style.display = "none";
+      startGame();
     });
   }
 
-  // Показать инструкцию и поставить игру на паузу
   if (showIntroButton && intro) {
     showIntroButton.addEventListener("click", () => {
-      gameStarted = false;  // останавливаем движение и таймер
-      gameOver = false;     // убираем состояние "конец игры"
-      clearDirection();     // корабль перестаёт двигаться
-      intro.style.display = "flex"; // снова показываем окно-инструкцию
+      gameStarted = false;
+      gameOver = false;
+      clearDirection();
+      intro.style.display = "flex";
     });
   }
 
-  // Первый кадр: поле видно, но игра ещё не запущена
+  if (showAboutButton) {
+    showAboutButton.addEventListener("click", () => {
+      gameStarted = false;
+      clearDirection();
+      const aboutOverlay = document.getElementById("aboutOverlay");
+      if (aboutOverlay) aboutOverlay.style.display = "flex";
+    });
+  }
+
+  // Кнопки внутри ABOUT
+  const aboutOverlay = document.getElementById("aboutOverlay");
+  const aboutOkBtn = document.getElementById("aboutOkBtn");
+  const aboutMoreBtn = document.getElementById("aboutMoreBtn");
+
+  if (aboutOkBtn && aboutOverlay) {
+    aboutOkBtn.addEventListener("click", () => {
+      aboutOverlay.style.display = "none";
+    });
+  }
+
+  if (aboutMoreBtn && aboutOverlay && intro) {
+    aboutMoreBtn.addEventListener("click", () => {
+      aboutOverlay.style.display = "none";
+      gameStarted = false;
+      gameOver = false;
+      clearDirection();
+      intro.style.display = "flex";
+    });
+  }
+
+  // Первый кадр
   resetPlayerPosition();
   draw();
 });
