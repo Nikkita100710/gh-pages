@@ -63,25 +63,25 @@
       display: flex;
       justify-content: center;
       align-items: center;
-      gap: 28px;
+      gap: 24px;              /* было 28px – чуть ближе к кнопкам справа */
     }
 
     .dpad {
       display: flex;
       flex-direction: column;
       align-items: center;
-      gap: 4px;
+      gap: 2px;               /* было 4px – ряды стрелок ближе друг к другу */
     }
 
     .controls-row {
       display: flex;
       justify-content: center;
-      gap: 24px;
+      gap: 40px;              /* было 24px – левую/правую стрелки раздвинули шире */
     }
 
     .control-btn {
-      width: 56px;
-      height: 56px;
+      width: 52px;
+      height: 52px;
       border-radius: 50%;
       border: 2px solid rgba(255, 255, 255, 0.9);
       background: radial-gradient(circle at 30% 30%, #ffe599 0%, #ffc000 40%, #c08000 100%);
@@ -551,9 +551,6 @@
           </div>
         </div>
 
-        <p class="hint">
-          Управление: стрелки / WASD на клавиатуре (ПК) или жёлтые кнопки ниже (телефон).
-        </p>
       </div>
     </main>
   </div>
