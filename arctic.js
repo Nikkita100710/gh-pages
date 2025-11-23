@@ -672,9 +672,14 @@ window.addEventListener("DOMContentLoaded", () => {
       const aboutOverlay = document.getElementById("aboutOverlay");
       if (intro) intro.style.display = "none";
       if (aboutOverlay) aboutOverlay.style.display = "none";
+
       startGame();
+      if (btnPause) {
+        btnPause.textContent = "PAUSE";  // после сброса показываем, что игра идёт
+      }
     });
   }
+
 
   if (btnSound) {
     btnSound.addEventListener("click", () => {
@@ -685,8 +690,19 @@ window.addEventListener("DOMContentLoaded", () => {
 
   if (btnPause) {
     btnPause.addEventListener("click", () => {
-      if (!gameStarted || gameOver) return;
+      // 1) Если ещё ни разу не запускали игру или раунд закончился — это кнопка START
+      if (!gameStarted || gameOver) {
+        const intro = document.getElementById("intro");
+        const aboutOverlay = document.getElementById("aboutOverlay");
+        if (intro) intro.style.display = "none";
+        if (aboutOverlay) aboutOverlay.style.display = "none";
 
+        startGame();
+        btnPause.textContent = "PAUSE";
+        return;
+      }
+
+      // 2) Иначе — обычный режим PAUSE / START
       if (!paused) {
         // Входим в паузу
         paused = true;
@@ -703,6 +719,7 @@ window.addEventListener("DOMContentLoaded", () => {
       }
     });
   }
+
 
 
   if (btnOptions) {
@@ -742,6 +759,5 @@ window.addEventListener("DOMContentLoaded", () => {
 
   // ----- ЗАПУСК -----
   resetPlayerPosition();
-  startGame();      // сразу запускаем раунд
   draw();
 });
