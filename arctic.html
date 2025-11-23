@@ -236,6 +236,44 @@
         font-size: 14px;
         padding: 8px 0;
       }
+          .meta-buttons {
+      margin-top: 6px;
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 8px;
+    }
+
+    .meta-btn {
+      border: none;
+      border-radius: 999px;
+      padding: 6px 12px;
+      font-size: 13px;
+      cursor: pointer;
+      background: #123b66;
+      color: #ffffff;
+      box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.25);
+      transition: background 0.15s ease, transform 0.1s ease,
+        box-shadow 0.15s ease;
+    }
+
+    .meta-btn:hover {
+      background: #195187;
+      box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.3);
+    }
+
+    .meta-btn:active {
+      transform: translateY(1px) scale(0.97);
+      box-shadow: none;
+    }
+
+    @media (max-width: 480px) {
+      .meta-btn {
+        font-size: 12px;
+        padding: 6px 10px;
+      }
+    }
+
     }
   </style>
 </head>
@@ -315,6 +353,15 @@
         <p class="hint">
           Управление: стрелки / WASD на клавиатуре (ПК) или кнопки ниже (телефон).
         </p>
+                <div class="meta-buttons">
+          <button id="btn-restart" class="meta-btn">
+            ⟳ Начать сначала
+          </button>
+          <button id="btn-intro" class="meta-btn">
+            ❔ Показать инструкцию
+          </button>
+        </div>
+
       </div>
     </main>
   </div>
