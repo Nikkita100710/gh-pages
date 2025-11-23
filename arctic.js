@@ -33,6 +33,8 @@ window.addEventListener("DOMContentLoaded", () => {
   let gameOver = false;
   let gameStarted = false; // игра хотя бы раз была запущена
   let paused = false;
+  let pauseAccumulated = 0; // суммарное "замороженное" время
+  let pauseStartedAt = null; // когда нажали PAUSE
 
   // ----- ДВИЖЕНИЕ КОРАБЛЯ -----
   const MOVE_DELAY = 200; // шаг не чаще, чем раз в 200 мс
@@ -82,6 +84,9 @@ window.addEventListener("DOMContentLoaded", () => {
     clearDirection();
     gameOver = false;
     paused = false;
+
+    pauseAccumulated = 0;
+    pauseStartedAt = null;
 
     lastStepDx = 0;
     lastStepDy = 0;
@@ -399,7 +404,13 @@ window.addEventListener("DOMContentLoaded", () => {
 
   // ----- ТАЙМЕР -----
   function updateTimer(now) {
-    const elapsed = now - roundStartTime;
+    // Если мы в режиме паузы, считаем, что время "застряло" на момент pauseStartedAt
+    let effectiveNow = now;
+    if (pauseStartedAt !== null) {
+      effectiveNow = pauseStartedAt;
+    }
+
+    const elapsed = effectiveNow - roundStartTime - pauseAccumulated;
     const remaining = ROUND_DURATION_MS - elapsed;
 
     if (remaining <= 0) {
@@ -407,6 +418,7 @@ window.addEventListener("DOMContentLoaded", () => {
       clearDirection();
     }
   }
+
 
   function formatTime(ms) {
     const totalSeconds = Math.max(0, Math.floor(ms / 1000));
@@ -419,10 +431,16 @@ window.addEventListener("DOMContentLoaded", () => {
 
   function drawTimer(now) {
     let remaining;
+
     if (!gameStarted) {
       remaining = ROUND_DURATION_MS;
     } else {
-      const elapsed = now - roundStartTime;
+      let effectiveNow = now;
+      if (pauseStartedAt !== null) {
+        effectiveNow = pauseStartedAt;
+      }
+
+      const elapsed = effectiveNow - roundStartTime - pauseAccumulated;
       remaining = Math.max(0, ROUND_DURATION_MS - elapsed);
     }
 
@@ -668,10 +686,24 @@ window.addEventListener("DOMContentLoaded", () => {
   if (btnPause) {
     btnPause.addEventListener("click", () => {
       if (!gameStarted || gameOver) return;
-      paused = !paused;
-      btnPause.textContent = paused ? "START" : "PAUSE";
+
+      if (!paused) {
+        // Входим в паузу
+        paused = true;
+        pauseStartedAt = Date.now();
+        btnPause.textContent = "START";
+      } else {
+        // Выходим из паузы
+        paused = false;
+        if (pauseStartedAt !== null) {
+          pauseAccumulated += Date.now() - pauseStartedAt;
+          pauseStartedAt = null;
+        }
+        btnPause.textContent = "PAUSE";
+      }
     });
   }
+
 
   if (btnOptions) {
     btnOptions.addEventListener("click", () => {
