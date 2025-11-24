@@ -1,23 +1,23 @@
-// Arctic Rescue — одиночный прототип с "тетрис-пультом" и окнами About / Instruction.
+// Arctic Rescue — одиночний прототип з "тетріс-пультом" та вікнами Про гру / Інструкція.
 
 window.addEventListener("DOMContentLoaded", () => {
   const canvas = document.getElementById("gameCanvas");
   const ctx = canvas.getContext("2d");
 
   if (!canvas || !ctx) {
-    console.error("Не найден canvas с id='gameCanvas' или контекст рисования.");
+    console.error("Не знайдено canvas з id='gameCanvas' або контекст малювання.");
     return;
   }
 
-  // ---- ЗАГРУЗКА КАРТИНКИ КОРАБЛЯ ----
+  // ---- ЗАВАНТАЖЕННЯ ЗОБРАЖЕННЯ КОРАБЛЯ ----
   const boatImage = new Image();
   let boatImageLoaded = false;
-  boatImage.src = "boat.png"; // PNG лодки рядом с arctic.html
+  boatImage.src = "boat.png"; // PNG лодки поруч з arctic.html
   boatImage.onload = () => {
     boatImageLoaded = true;
   };
 
-  // ----- ПАРАМЕТРЫ СЕТКИ -----
+  // ----- ПАРАМЕТРИ СІТКИ -----
   const GRID_COLS = 10;
   const GRID_ROWS = 12;
 
@@ -27,17 +27,18 @@ window.addEventListener("DOMContentLoaded", () => {
   const northPoleRows = 1;
   const continentRows = 1;
 
-  // ----- СОСТОЯНИЕ ИГРЫ -----
-  const ROUND_DURATION_MS = 60_000; // 1 минута
+  // ----- СТАН ГРИ -----
+  const ROUND_DURATION_MS = 60_000; // 1 хвилина
   let roundStartTime = 0;
   let gameOver = false;
-  let gameStarted = false; // игра хотя бы раз была запущена
+  let gameStarted = false; // гру хоча б раз запускали
   let paused = false;
-  let pauseAccumulated = 0; // суммарное "замороженное" время
-  let pauseStartedAt = null; // когда нажали PAUSE
 
-  // ----- ДВИЖЕНИЕ КОРАБЛЯ -----
-  const MOVE_DELAY = 200; // шаг не чаще, чем раз в 200 мс
+  let pauseAccumulated = 0; // сумарний час у паузі
+  let pauseStartedAt = null; // коли натиснули ПАУЗУ
+
+  // ----- РУХ КОРАБЛЯ -----
+  const MOVE_DELAY = 200; // крок не частіше, ніж раз на 200 мс
   let lastMoveTime = 0;
   let desiredDx = 0;
   let desiredDy = 0;
@@ -49,7 +50,7 @@ window.addEventListener("DOMContentLoaded", () => {
 
   const player = {
     col: Math.floor(GRID_COLS / 2),
-    row: GRID_ROWS - 2, // над континентом (10)
+    row: GRID_ROWS - 2, // над континентом (10-й ряд)
   };
 
   // ----- АЙСБЕРГИ -----
@@ -64,11 +65,11 @@ window.addEventListener("DOMContentLoaded", () => {
   let lastIcebergMoveTime = 0;
   let lastIcebergSpawnTime = 0;
 
-  // ----- МЕДВЕДИ -----
+  // ----- ВЕДМЕДІ -----
   let carryingBear = false;
   let savedBears = 0;
 
-  // ----- ВСПОМОГАТЕЛЬНОЕ -----
+  // ----- ДОПОМІЖНІ ФУНКЦІЇ -----
   function resetPlayerPosition() {
     player.col = Math.floor(GRID_COLS / 2);
     player.row = GRID_ROWS - 2;
@@ -99,7 +100,7 @@ window.addEventListener("DOMContentLoaded", () => {
     roundStartTime = Date.now();
   }
 
-  // ----- РИСОВКА ГОЛОВЫ МЕДВЕДЯ -----
+  // ----- МАЛЮВАННЯ ГОЛОВИ ВЕДМЕДЯ -----
   function drawBearHead(x, y, bodyRadius) {
     const earRadius = bodyRadius * 0.4;
 
@@ -109,26 +110,26 @@ window.addEventListener("DOMContentLoaded", () => {
     ctx.strokeStyle = "rgba(0, 0, 60, 0.8)";
     ctx.lineWidth = 2;
 
-    // Тело
+    // Тіло
     ctx.beginPath();
     ctx.arc(x, y, bodyRadius, 0, Math.PI * 2);
     ctx.fill();
     ctx.stroke();
 
-    // Ушки
+    // Вушка
     ctx.beginPath();
     ctx.arc(x - bodyRadius * 0.6, y - bodyRadius * 0.6, earRadius, 0, Math.PI * 2);
     ctx.arc(x + bodyRadius * 0.6, y - bodyRadius * 0.6, earRadius, 0, Math.PI * 2);
     ctx.fill();
     ctx.stroke();
 
-    // Нос
+    // Ніс
     ctx.fillStyle = "#333333";
     ctx.beginPath();
     ctx.arc(x, y + bodyRadius * 0.15, bodyRadius * 0.2, 0, Math.PI * 2);
     ctx.fill();
 
-    // Глазки
+    // Очі
     ctx.beginPath();
     const eyeOffsetX = bodyRadius * 0.35;
     const eyeOffsetY = bodyRadius * 0.15;
@@ -139,7 +140,7 @@ window.addEventListener("DOMContentLoaded", () => {
     ctx.restore();
   }
 
-  // ----- ОСНОВНОЙ ЦИКЛ ОТРИСОВКИ -----
+  // ----- ОСНОВНИЙ ЦИКЛ МАЛЮВАННЯ -----
   function draw() {
     const now = Date.now();
 
@@ -158,7 +159,7 @@ window.addEventListener("DOMContentLoaded", () => {
     ctx.fillStyle = oceanGradient;
     ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-    // Полюс
+    // Північний полюс
     ctx.fillStyle = "#e0f7ff";
     ctx.fillRect(0, 0, canvas.width, northPoleRows * cellHeight);
 
@@ -192,17 +193,17 @@ window.addEventListener("DOMContentLoaded", () => {
 
     ctx.textBaseline = "middle";
 
-    // Название игры — слева
+    // Назва гри — зліва
     ctx.fillStyle = "#cc7a00";
     ctx.font = "bold 20px Segoe UI";
     ctx.textAlign = "left";
     ctx.fillText("Arctic Rescue", 12, textY);
 
-    // Подпись про Северный полюс — центр
+    // Підпис про полюс — по центру
     ctx.fillStyle = "#003366";
     ctx.font = "16px Segoe UI";
     ctx.textAlign = "center";
-    ctx.fillText("Северный полюс — белые медведи", canvas.width / 2, textY);
+    ctx.fillText("Північний полюс — білі ведмеді", canvas.width / 2, textY);
 
     // Континент
     const bandTop = canvas.height - continentRows * cellHeight;
@@ -323,7 +324,7 @@ window.addEventListener("DOMContentLoaded", () => {
     ctx.font = "12px Segoe UI";
     ctx.textAlign = "center";
     ctx.textBaseline = "bottom";
-    ctx.fillText("Player", xCenter, yCenter + hullHeight / 2 + 14);
+    ctx.fillText("Гравець", xCenter, yCenter + hullHeight / 2 + 14);
   }
 
   function drawIcebergs() {
@@ -399,12 +400,11 @@ window.addEventListener("DOMContentLoaded", () => {
     ctx.font = "16px Segoe UI";
     ctx.textAlign = "left";
     ctx.textBaseline = "middle";
-    ctx.fillText(`Спасено: ${savedBears} белых медведей`, 10, y);
+    ctx.fillText(`Врятовано: ${savedBears} білих ведмедів`, 10, y);
   }
 
   // ----- ТАЙМЕР -----
   function updateTimer(now) {
-    // Если мы в режиме паузы, считаем, что время "застряло" на момент pauseStartedAt
     let effectiveNow = now;
     if (pauseStartedAt !== null) {
       effectiveNow = pauseStartedAt;
@@ -418,7 +418,6 @@ window.addEventListener("DOMContentLoaded", () => {
       clearDirection();
     }
   }
-
 
   function formatTime(ms) {
     const totalSeconds = Math.max(0, Math.floor(ms / 1000));
@@ -444,7 +443,7 @@ window.addEventListener("DOMContentLoaded", () => {
       remaining = Math.max(0, ROUND_DURATION_MS - elapsed);
     }
 
-    const text = `Время: ${formatTime(remaining)}`;
+    const text = `Час: ${formatTime(remaining)}`;
 
     ctx.fillStyle = "#ffffff";
     ctx.font = "16px Segoe UI";
@@ -463,11 +462,11 @@ window.addEventListener("DOMContentLoaded", () => {
     ctx.font = "28px Segoe UI";
     ctx.textAlign = "center";
     ctx.textBaseline = "middle";
-    ctx.fillText("Время вышло!", canvas.width / 2, canvas.height / 2 - 10);
+    ctx.fillText("Час вийшов!", canvas.width / 2, canvas.height / 2 - 10);
 
     ctx.font = "18px Segoe UI";
     ctx.fillText(
-      `Спасено: ${savedBears} белых медведей`,
+      `Врятовано: ${savedBears} білих ведмедів`,
       canvas.width / 2,
       canvas.height / 2 + 20
     );
@@ -487,7 +486,7 @@ window.addEventListener("DOMContentLoaded", () => {
     }
   }
 
-  // ----- ДВИЖЕНИЕ КОРАБЛЯ -----
+  // ----- РУХ КОРАБЛЯ -----
   function movePlayer(dx, dy) {
     const newCol = player.col + dx;
     if (newCol >= 0 && newCol < GRID_COLS) {
@@ -575,7 +574,7 @@ window.addEventListener("DOMContentLoaded", () => {
     clearDirection();
   }
 
-  // ----- УПРАВЛЕНИЕ -----
+  // ----- КЕРУВАННЯ -----
   function setDirection(dx, dy) {
     desiredDx = dx;
     desiredDy = dy;
@@ -660,7 +659,7 @@ window.addEventListener("DOMContentLoaded", () => {
   attachButtonControls(btnLeft, -1, 0);
   attachButtonControls(btnRight, 1, 0);
 
-  // ----- СИСТЕМНЫЕ КНОПКИ: RESET / SOUND / PAUSE / OPTIONS -----
+  // ----- СИСТЕМНІ КНОПКИ: СПОЧАТКУ / ЗВУК / СТАРТ-ПАУЗА / МЕНЮ -----
   const btnReset = document.getElementById("btn-reset");
   const btnSound = document.getElementById("btn-sound");
   const btnPause = document.getElementById("btn-pause");
@@ -675,22 +674,21 @@ window.addEventListener("DOMContentLoaded", () => {
 
       startGame();
       if (btnPause) {
-        btnPause.textContent = "PAUSE";  // после сброса показываем, что игра идёт
+        btnPause.textContent = "ПАУЗА";
       }
     });
   }
 
-
   if (btnSound) {
     btnSound.addEventListener("click", () => {
-      // Заглушка: просто визуально включаем/выключаем
+      // Поки що заглушка: просто міняємо вигляд кнопки
       btnSound.classList.toggle("sys-btn-off");
     });
   }
 
   if (btnPause) {
     btnPause.addEventListener("click", () => {
-      // 1) Если ещё ни разу не запускали игру или раунд закончился — это кнопка START
+      // 1) Якщо гру ще не запускали або раунд закінчився — це кнопка СТАРТ
       if (!gameStarted || gameOver) {
         const intro = document.getElementById("intro");
         const aboutOverlay = document.getElementById("aboutOverlay");
@@ -698,39 +696,37 @@ window.addEventListener("DOMContentLoaded", () => {
         if (aboutOverlay) aboutOverlay.style.display = "none";
 
         startGame();
-        btnPause.textContent = "PAUSE";
+        btnPause.textContent = "ПАУЗА";
         return;
       }
 
-      // 2) Иначе — обычный режим PAUSE / START
+      // 2) Інакше — звичайний режим ПАУЗА / СТАРТ
       if (!paused) {
-        // Входим в паузу
+        // Входимо в паузу
         paused = true;
         pauseStartedAt = Date.now();
-        btnPause.textContent = "START";
+        btnPause.textContent = "СТАРТ";
       } else {
-        // Выходим из паузы
+        // Виходимо з паузи
         paused = false;
         if (pauseStartedAt !== null) {
           pauseAccumulated += Date.now() - pauseStartedAt;
           pauseStartedAt = null;
         }
-        btnPause.textContent = "PAUSE";
+        btnPause.textContent = "ПАУЗА";
       }
     });
   }
-
-
 
   if (btnOptions) {
     btnOptions.addEventListener("click", () => {
       const aboutOverlay = document.getElementById("aboutOverlay");
       if (aboutOverlay) aboutOverlay.style.display = "flex";
-      // игру не останавливаем, Никита решит, ставить ли PAUSE
+      // Гру спеціально не зупиняємо — гравець сам вирішить, натискати ПАУЗУ чи ні
     });
   }
 
-  // ----- ОКНА INTRO и ABOUT -----
+  // ----- ВІКНА INTRO та ABOUT -----
   const intro = document.getElementById("intro");
   const startButton = document.getElementById("startButton");
 
@@ -759,5 +755,6 @@ window.addEventListener("DOMContentLoaded", () => {
 
   // ----- ЗАПУСК -----
   resetPlayerPosition();
+  // Гру не запускаємо автоматично — чекаємо на натискання "СТАРТ" або "СПОЧАТКУ"
   draw();
 });
