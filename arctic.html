@@ -1,9 +1,9 @@
 <!DOCTYPE html>
-<html lang="ru">
+<html lang="uk">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Arctic Rescue</title>
+  <title>Arctic Rescue — рятуємо білих ведмедів</title>
   <style>
     * {
       box-sizing: border-box;
@@ -49,7 +49,7 @@
       background: #002b55;
     }
 
-    /* НИЖНИЙ ПУЛЬТ: джойстик + системные кнопки */
+    /* НИЖНІЙ ПУЛЬТ: джойстик + системні кнопки */
 
     .controls {
       margin-top: 12px;
@@ -63,20 +63,20 @@
       display: flex;
       justify-content: center;
       align-items: center;
-      gap: 24px;              /* было 28px – чуть ближе к кнопкам справа */
+      gap: 24px;
     }
 
     .dpad {
       display: flex;
       flex-direction: column;
       align-items: center;
-      gap: 0;               /* ряды ещё ближе друг к другу */
+      gap: 0;               /* ряди стрілок максимально близько */
     }
 
     .controls-row {
       display: flex;
       justify-content: center;
-      gap: 44px;            /* немного шире лево-право */
+      gap: 44px;            /* ліво/право трохи ширше один від одного */
     }
 
     .control-btn {
@@ -112,7 +112,7 @@
       pointer-events: none;
     }
 
-    /* Системные кнопки справа */
+    /* Системні кнопки справа */
 
     .system-panel {
       display: flex;
@@ -159,20 +159,13 @@
       filter: grayscale(0.7) brightness(0.85);
     }
 
-    .hint {
-      margin-top: 2px;
-      font-size: 12px;
-      text-align: center;
-      opacity: 0.9;
-    }
-
-    /* ВСТУПИТЕЛЬНАЯ ИНСТРУКЦИЯ (теперь открывается ТОЛЬКО из About->More) */
+    /* ВСТУПНА ІНСТРУКЦІЯ (тепер тільки з About->More) */
 
     .intro-overlay {
       position: fixed;
       inset: 0;
       background: rgba(0, 0, 0, 0.7);
-      display: none; /* ВАЖНО: по умолчанию скрыто */
+      display: none;
       justify-content: center;
       align-items: center;
       z-index: 1000;
@@ -393,8 +386,8 @@
       }
 
       .control-btn {
-        width: 52px;
-        height: 52px;
+        width: 48px;
+        height: 48px;
         font-size: 22px;
       }
 
@@ -414,7 +407,7 @@
       }
 
       .intro-window h2 {
-        font-size  : 16px;
+        font-size: 16px;
       }
 
       .intro-start-btn {
@@ -438,80 +431,80 @@
   </style>
 </head>
 <body>
-  <!-- ИНСТРУКЦИЯ: теперь только через ABOUT->More -->
+  <!-- ІНСТРУКЦІЯ: тепер тільки через ABOUT->Детальніше -->
   <div id="intro" class="intro-overlay">
     <div class="intro-window">
-      <h1>Arctic Rescue — спасаем белых медведей</h1>
+      <h1>Arctic Rescue — рятуємо білих ведмедів</h1>
 
       <p>
-        В Северном Ледовитом океане дрейфуют айсберги. Белые медведи застряли
-        на Северном полюсе и ждут помощи. Твой ледокол должен перевезти как
-        можно больше медведей с полюса (верхняя белая полоса) на континент
-        (нижняя зелёная полоса).
+        У Північному Льодовитому океані дрейфують айсберги. Білі ведмеді
+        застрягли на Північному полюсі й чекають на допомогу.
+        Твій криголам має перевезти якомога більше ведмедів
+        з полюса (верхня біла смуга) на континент (нижня зелена смуга).
       </p>
 
-      <h2>Как играть</h2>
+      <h2>Як грати</h2>
       <ul>
-        <li><strong>Цель:</strong> за 1&nbsp;минуту спасти как можно больше белых медведей.</li>
-        <li><strong>Шаг 1.</strong> Двигай корабль по клеткам океана, обходя айсберги.</li>
-        <li><strong>Шаг 2.</strong> Доплыви до Северного полюса (самый верх).
-          Попробуй выйти ещё на одну клетку вверх — медведь прыгает на корабль.</li>
-        <li><strong>Шаг 3.</strong> Вернись к континенту (нижняя зелёная полоса)
-          и попробуй сделать шаг ещё ниже — медведь считается спасённым.</li>
-        <li><strong>Столкновение с айсбергом:</strong> корабль возвращается на старт,
-          медведь с палубы пропадает.</li>
+        <li><strong>Мета:</strong> за 1&nbsp;хвилину врятувати якнайбільше білих ведмедів.</li>
+        <li><strong>Крок 1.</strong> Рухай корабель по клітинках океану, обминаючи айсберги.</li>
+        <li><strong>Крок 2.</strong> Допливи до Північного полюса (самий верх).
+          Спробуй вийти ще на одну клітинку вгору — ведмідь стрибає на корабель.</li>
+        <li><strong>Крок 3.</strong> Повернися до континенту (нижня зелена смуга)
+          і спробуй зробити крок ще нижче — ведмідь вважається врятованим.</li>
+        <li><strong>Зіткнення з айсбергом:</strong> корабель повертається на старт,
+          ведмідь з палуби зникає.</li>
       </ul>
 
-      <h2>Управление</h2>
+      <h2>Керування</h2>
       <ul>
-        <li><strong>Компьютер:</strong> стрелки на клавиатуре или клавиши <strong>W A S D</strong>.</li>
-        <li><strong>Телефон / планшет:</strong> нажимай на круглые стрелки под полем.</li>
+        <li><strong>Комп’ютер:</strong> стрілки на клавіатурі або клавіші <strong>W A S D</strong>.</li>
+        <li><strong>Телефон / планшет:</strong> натискай на жовті круглі стрілки під полем.</li>
       </ul>
 
       <p class="intro-note">
-        Ты можешь закрыть эту подсказку и вернуться к игре в любой момент.
+        Ти можеш закрити цю підказку й у будь-який момент повернутися до гри.
       </p>
 
       <button id="startButton" class="intro-start-btn">
-        Продолжить игру
+        Повернутися до гри
       </button>
     </div>
   </div>
 
-  <!-- ABOUT ОКНО -->
+  <!-- ВІКНО ABOUT -->
   <div id="aboutOverlay" class="about-overlay">
     <div class="about-window">
       <div class="about-tabs">
-        <button class="about-tab disabled">OPTIONS</button>
-        <button class="about-tab disabled">SCORES</button>
-        <button class="about-tab active">ABOUT</button>
+        <button class="about-tab disabled">НАЛАШТУВАННЯ</button>
+        <button class="about-tab disabled">РЕКОРДИ</button>
+        <button class="about-tab active">ПРО ГРУ</button>
       </div>
 
       <div class="about-content">
         <div class="about-image-wrapper">
-          <img src="iceberg-about-720x404.jpg" alt="Arctic iceberg" class="about-image" />
+          <img src="iceberg-about-720x404.jpg" alt="Крижаний айсберг" class="about-image" />
         </div>
 
         <p class="about-copy">
           © 2025 MK Game Studio<br />
-          Created by M. Kadantsev
+          Створив M. Kadantsev
         </p>
 
         <div class="about-buttons">
-          <button class="about-btn">Feedback</button>
-          <button class="about-btn">Rate us</button>
-          <button class="about-btn">Tell</button>
-          <button id="aboutMoreBtn" class="about-btn">More</button>
+          <button class="about-btn">Відгук</button>
+          <button class="about-btn">Оцініть</button>
+          <button class="about-btn">Розповісти</button>
+          <button id="aboutMoreBtn" class="about-btn">Детальніше</button>
         </div>
 
         <div class="about-ok-wrapper">
-          <button id="aboutOkBtn" class="about-ok-btn">OK</button>
+          <button id="aboutOkBtn" class="about-ok-btn">Гаразд</button>
         </div>
       </div>
     </div>
   </div>
 
-  <!-- ОСНОВНОЙ ЭКРАН ИГРЫ -->
+  <!-- ОСНОВНИЙ ЕКРАН ГРИ -->
   <div class="page">
     <main class="game-card">
       <div class="canvas-wrapper">
@@ -542,15 +535,14 @@
             </div>
           </div>
 
-          <!-- Системные кнопки -->
+          <!-- Системні кнопки -->
           <div class="system-panel">
-            <button id="btn-reset" class="sys-btn sys-btn-red">RESET</button>
-            <button id="btn-sound" class="sys-btn sys-btn-green sys-btn-off">SOUND</button>
-            <button id="btn-pause" class="sys-btn sys-btn-green">START</button>
-            <button id="btn-options" class="sys-btn sys-btn-yellow">OPTIONS</button>
+            <button id="btn-reset" class="sys-btn sys-btn-red">СПОЧАТКУ</button>
+            <button id="btn-sound" class="sys-btn sys-btn-green sys-btn-off">ЗВУК</button>
+            <button id="btn-pause" class="sys-btn sys-btn-green">СТАРТ</button>
+            <button id="btn-options" class="sys-btn sys-btn-yellow">МЕНЮ</button>
           </div>
         </div>
-
       </div>
     </main>
   </div>
