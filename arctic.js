@@ -1209,6 +1209,18 @@ window.addEventListener("DOMContentLoaded", () => {
   const modeLocal2Btn = document.getElementById("mode-local2");
   const modeOnline2Btn = document.getElementById("mode-online2");
   const controlPad = document.getElementById("controlPad");
+  
+  // Визначаємо, чи схоже, що це телефон / планшет
+  const isProbablyTouch =
+    "ontouchstart" in window || (navigator.maxTouchPoints || 0) > 0;
+  const isSmallScreen = window.innerWidth <= 800;
+  const isMobile = isProbablyTouch && isSmallScreen;
+
+  // Якщо це мобільний пристрій — робимо режим "Двоє гравців (один пристрій)" неактивним
+  if (isMobile && modeLocal2Btn) {
+    modeLocal2Btn.disabled = true;
+    modeLocal2Btn.classList.add("mode-disabled");
+  }
 
   // Показуємо вибір режиму одразу після завантаження сторінки
   if (modeOverlay) {
