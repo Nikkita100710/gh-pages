@@ -2,7 +2,7 @@
 <html lang="uk">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="viewport" content="width=device=device-width, initial-scale=1.0" />
   <title>Arctic Rescue — рятуємо білих ведмедів</title>
   <style>
     * {
@@ -504,6 +504,33 @@
     </div>
   </div>
 
+  <!-- ВИБІР РЕЖИМУ ГРИ -->
+  <div id="modeOverlay" class="intro-overlay">
+    <div class="intro-window">
+      <h1>Оберіть режим гри</h1>
+
+      <p>
+        Arctic Rescue можна проходити по-різному. Оберіть, як ви хочете грати зараз.
+      </p>
+
+      <ul>
+        <li><strong>Один гравець</strong> — класичний режим тренування.</li>
+        <li><strong>Двоє гравців (один пристрій)</strong> — два криголами на одній клавіатурі.</li>
+        <li><strong>Двоє гравців онлайн</strong> — майбутній режим з кімнатами та кодами.</li>
+      </ul>
+
+      <button id="mode-single" class="intro-start-btn">
+        Один гравець
+      </button>
+      <button id="mode-local2" class="intro-start-btn" style="margin-top: 8px;">
+        Двоє гравців (один пристрій)
+      </button>
+      <button id="mode-online2" class="intro-start-btn" style="margin-top: 8px;">
+        Двоє гравців онлайн (у розробці)
+      </button>
+    </div>
+  </div>
+
   <!-- ОСНОВНИЙ ЕКРАН ГРИ -->
   <div class="page">
     <main class="game-card">
@@ -514,7 +541,7 @@
       <div class="controls">
         <div class="controls-main">
           <!-- Джойстик -->
-          <div class="dpad">
+          <div id="controlPad" class="dpad">
             <div class="controls-row">
               <button id="btn-up" class="control-btn">
                 <span>▲</span>
