@@ -226,7 +226,9 @@
       font-size: 16px;
       font-weight: 600;
       background: #ffcc33;
-      color: #2b2b2b;
+      /* Всегда темный текст поверх жёлтого фона */
+      color: #000000 !important;
+      -webkit-text-fill-color: #000000; /* для деяких мобільних браузерів */
       cursor: pointer;
       transition: transform 0.1s ease, box-shadow 0.1s ease,
         background 0.2s ease;
@@ -234,6 +236,8 @@
 
     .intro-start-btn:hover {
       background: #ffdf66;
+      color: #000000 !important;
+      -webkit-text-fill-color: #000000;
       box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.3);
       transform: translateY(-1px);
     }
@@ -241,7 +245,10 @@
     .intro-start-btn:active {
       transform: translateY(1px) scale(0.98);
       box-shadow: none;
+      color: #000000 !important;
+      -webkit-text-fill-color: #000000;
     }
+
 
         .mode-disabled {
       opacity: 0.5;
