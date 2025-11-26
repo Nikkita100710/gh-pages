@@ -72,15 +72,18 @@ window.addEventListener("DOMContentLoaded", () => {
   let savedBears = 0;
 
   // ----- ЛОКАЛЬНИЙ 2-ГРАВЦЕВИЙ РЕЖИМ -----
+  // Стартові позиції у режимі двох гравців:
+  // Гравець 1 — 3 колонка, Гравець 2 — 6 колонка (симетрично відносно центру).
   const player1 = {
-    col: Math.floor(GRID_COLS / 2) - 1,
+    col: 3,
     row: GRID_ROWS - 2,
   };
 
   const player2 = {
-    col: Math.floor(GRID_COLS / 2) + 1,
+    col: 6,
     row: GRID_ROWS - 2,
   };
+
 
   let facingDx1 = 0;
   let facingDy1 = -1;
@@ -126,20 +129,20 @@ window.addEventListener("DOMContentLoaded", () => {
   }
 
   function resetLocalPlayerPosition(playerIndex) {
-    const middle = Math.floor(GRID_COLS / 2);
     const row = GRID_ROWS - 2;
     if (playerIndex === 1) {
-      player1.col = middle - 1;
+      player1.col = 3;
       player1.row = row;
       facingDx1 = 0;
       facingDy1 = -1;
     } else {
-      player2.col = middle + 1;
+      player2.col = 6;
       player2.row = row;
       facingDx2 = 0;
       facingDy2 = -1;
     }
   }
+
 
   function resetLocalPlayersPositions() {
     resetLocalPlayerPosition(1);
