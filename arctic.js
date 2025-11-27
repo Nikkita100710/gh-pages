@@ -1,3 +1,4 @@
+
 // Arctic Rescue — одиночний режим + локальний мультиплеєр на одному пристрої.
 // УВАГА: увесь інтерфейс (текст на кнопках, підказки) — українською для дітей.
 // Тут в коді коментарі рос/укр для зручності розробки.
@@ -38,19 +39,173 @@ window.addEventListener("DOMContentLoaded", () => {
 
   // ----- СТАН ГРИ (СПІЛЬНИЙ) -----
   const ROUND_DURATION_MS = 60_000; // 1 хвилина
-  let roundStartTime = 0;
-  let gameOver = false;
-  let gameStarted = false;
-  let paused = false;
 
-  let pauseAccumulated = 0; // сумарний час у паузі
-  let pauseStartedAt = null;
+  // Єдиний об'єкт стану гри для флагів і таймера
+  const gameState = {
+    mode: "single",        // "single", "local2", потім додамо "online2"
+    gameStarted: false,
+    gameOver: false,
+    paused: false,
+    roundStartTime: 0,
+    pauseAccumulated: 0,  // сумарний час у паузі
+    pauseStartedAt: null,
+  };
+  // ----- ОНЛАЙН-РЕЖИМ (заготовка для Firebase) -----
+  let onlineRoomId = null;
+  let onlineIsHost = false;
+
+  // Невеличкий інтервал синхронізації (приблизно 7 разів на секунду)
+  const NET_SYNC_INTERVAL_MS = 80;
+  let lastHostSyncTime = 0;
+  let lastGuestSyncTime = 0;
+
+
+  function getFirebaseHelpers() {
+    // акуратно дістаємо те, що передали з arctic.html
+    if (!window.arcticFirebase) return null;
+    const { db, refFn, setFn, getFn } = window.arcticFirebase;
+    if (!db || !refFn || !setFn || !getFn) return null;
+    return { db, refFn, setFn, getFn };
+  }
+  // Відправка команд керування від гостя до Firebase
+  function sendGuestInput(dx, dy) {
+    // Працює тільки якщо ми в онлайн-режимі і є кімната
+    if (!onlineRoomId || onlineIsHost === true) return;
+
+    const helpers = getFirebaseHelpers();
+    if (!helpers) return;
+
+    const { db, refFn, setFn } = helpers;
+    const inputRef = refFn(db, `rooms/${onlineRoomId}/inputs/guest`);
+
+    const payload = {
+      dx,
+      dy,
+      updatedAt: Date.now()
+    };
+
+    setFn(inputRef, payload).catch((err) => {
+      console.error("Не вдалося відправити керування гостя:", err);
+    });
+  }
+
+
+
+  function generateRoomId(length = 4) {
+    const alphabet = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789"; // без 0, 1, O, I
+    let id = "";
+    for (let i = 0; i < length; i++) {
+      const index = Math.floor(Math.random() * alphabet.length);
+      id += alphabet[index];
+    }
+    return id;
+  }
+
+  function createOnlineRoomAsHost() {
+    const helpers = getFirebaseHelpers();
+    if (!helpers) {
+      alert("Онлайн-режим тимчасово недоступний (немає з'єднання з Firebase).");
+      return;
+    }
+
+    const { db, refFn, setFn } = helpers;
+
+    const roomId = generateRoomId(4);
+    const roomPath = `rooms/${roomId}`;
+    const roomRef = refFn(db, roomPath);
+
+    const now = Date.now();
+
+    const payload = {
+      mode: "online2",
+      createdAt: now,
+      host: {
+        name: "Гравець 1",
+        joinedAt: now
+      },
+      state: null // сюди потім покладемо buildNetState()
+    };
+
+    setFn(roomRef, payload)
+      .then(() => {
+        onlineRoomId = roomId;
+        onlineIsHost = true;
+        alert(
+          `Створено онлайн-кімнату.\nКод: ${roomId}\n\nСам режим ще у розробці, але запис у базі вже працює.`
+        );
+      })
+      .catch((err) => {
+        console.error("Помилка створення кімнати:", err);
+        alert("Не вдалося створити кімнату. Спробуйте пізніше.");
+      });
+  }
+  function joinOnlineRoomAsGuest(roomIdRaw) {
+    const helpers = getFirebaseHelpers();
+    if (!helpers) {
+      alert(
+        'Онлайн-режим тимчасово недоступний (немає з\'єднання з Firebase).'
+      );
+      return;
+    }
+
+    const { db, refFn, setFn, getFn } = helpers;
+
+    const roomId = roomIdRaw.trim().toUpperCase();
+    if (!roomId) {
+      alert("Код кімнати порожній.");
+      return;
+    }
+
+    const roomPath = `rooms/${roomId}`;
+    const roomRef = refFn(db, roomPath);
+
+    getFn(roomRef)
+      .then((snapshot) => {
+        if (!snapshot.exists()) {
+          alert(`Кімнату з кодом "${roomId}" не знайдено.`);
+          // кидаємо спец-помилку, щоб не виконувати наступний then
+          throw new Error("room-not-found");
+        }
+
+        const data = snapshot.val() || {};
+        const now = Date.now();
+
+        const updated = {
+          ...data,
+          guest: {
+            name: "Гравець 2",
+            joinedAt: now
+          }
+        };
+
+        return setFn(roomRef, updated);
+      })
+      .then(() => {
+        // якщо сюди дійшли — кімната існує і запис гостя успішний
+        onlineRoomId = roomId;
+        onlineIsHost = false;
+
+        alert(
+          `Ви приєдналися до кімнати з кодом ${roomId}.\n\n` +
+          "Онлайн-режим ще у розробці, але підключення до кімнати вже працює."
+        );
+      })
+      .catch((err) => {
+        if (err && err.message === "room-not-found") {
+          // це «нормальна» ситуація, ми вже показали alert вище
+          return;
+        }
+        console.error("Помилка приєднання до кімнати:", err);
+        alert("Не вдалося приєднатися до кімнати. Спробуйте пізніше.");
+      });
+  }
+
 
   // ----- РЕЖИМ ГРИ -----
   // "single"  — один гравець
   // "local2"  — двоє гравців на одному пристрої
   // "online2" — поки що у розробці, поводиться як single
-  let gameMode = "single";
+  let gameMode = gameState.mode;
 
   // ----- ОДИНОЧНИЙ РЕЖИМ: РУХ КОРАБЛЯ -----
   const MOVE_DELAY = 200; // крок не частіше, ніж раз на 200 мс
@@ -83,7 +238,6 @@ window.addEventListener("DOMContentLoaded", () => {
     col: 6,
     row: GRID_ROWS - 2,
   };
-
 
   let facingDx1 = 0;
   let facingDy1 = -1;
@@ -143,7 +297,6 @@ window.addEventListener("DOMContentLoaded", () => {
     }
   }
 
-
   function resetLocalPlayersPositions() {
     resetLocalPlayerPosition(1);
     resetLocalPlayerPosition(2);
@@ -151,10 +304,10 @@ window.addEventListener("DOMContentLoaded", () => {
 
   function resetCommonState() {
     icebergs = [];
-    gameOver = false;
-    paused = false;
-    pauseAccumulated = 0;
-    pauseStartedAt = null;
+    gameState.gameOver = false;
+    gameState.paused = false;
+    gameState.pauseAccumulated = 0;
+    gameState.pauseStartedAt = null;
     lastIcebergMoveTime = 0;
     lastIcebergSpawnTime = 0;
   }
@@ -193,15 +346,19 @@ window.addEventListener("DOMContentLoaded", () => {
 
   function startGame() {
     resetCommonState();
-    if (gameMode === "local2") {
+
+    if (gameMode === "local2" || (gameMode === "online2" && onlineIsHost)) {
+      // два гравці: локальний мультиплеєр або хост в online2
       resetLocal2State();
     } else {
-      // "single" або "online2" поводяться як одиночний режим
+      // звичайний одиночний режим (включаючи гостя в online2)
       resetSingleState();
     }
-    gameStarted = true;
-    roundStartTime = Date.now();
+
+    gameState.gameStarted = true;
+    gameState.roundStartTime = Date.now();
   }
+
 
   // ----- МАЛЮВАННЯ ГОЛОВИ ВЕДМЕДЯ -----
   function drawBearHead(x, y, bodyRadius) {
@@ -243,20 +400,32 @@ window.addEventListener("DOMContentLoaded", () => {
     ctx.restore();
   }
 
-  // ----- ОСНОВНИЙ ЦИКЛ МАЛЮВАННЯ -----
-  function draw() {
-    const now = Date.now();
+  // ====== НОВЫЙ ЦИКЛ: updateGame / renderGame / loop ======
 
-    if (gameStarted && !gameOver && !paused) {
-      updateTimer(now);
-      if (gameMode === "local2") {
-        handleMovementLocal2(now);
-      } else {
-        handleMovementSingle(now);
-      }
-      handleIcebergs(now);
+function updateGame(now) {
+  // Если мы гость в онлайн-комнате – ничего локально не считаем,
+  // просто ждём сетевой state от хоста
+  if (onlineRoomId && !onlineIsHost) {
+    return;
+  }
+
+  if (gameState.gameStarted && !gameState.gameOver && !gameState.paused) {
+    updateTimer(now);
+
+    if (gameMode === "local2" || (gameMode === "online2" && onlineIsHost)) {
+      // два гравці: або локальний мультиплеєр, або хост в онлайн-режимі
+      handleMovementLocal2(now);
+    } else {
+      // звичайний одиночний режим
+      handleMovementSingle(now);
     }
 
+    handleIcebergs(now);
+  }
+}
+
+
+  function renderGame(now) {
     ctx.clearRect(0, 0, canvas.width, canvas.height);
 
     // Океан
@@ -284,21 +453,274 @@ window.addEventListener("DOMContentLoaded", () => {
     drawGrid();
     drawIcebergs();
 
-    if (gameMode === "local2") {
+    if (gameMode === "local2" || gameMode === "online2") {
+      // два гравці: локальний мультиплеєр + онлайн-режим
       drawPlayersLocal2();
     } else {
+      // звичайний одиночний режим
       drawSinglePlayer();
     }
+
 
     drawScore();
     drawTimer(now);
 
-    if (gameOver) {
+    if (gameState.gameOver) {
       drawGameOverOverlay();
     }
-
-    requestAnimationFrame(draw);
   }
+
+  function loop() {
+    const now = Date.now();
+    updateGame(now);
+    renderGame(now);
+    // Онлайн-синхронізація (якщо є кімната)
+    handleOnlineSync(now);
+    requestAnimationFrame(loop);
+  }
+
+
+  // ===== СЕТЕВОЕ СОСТОЯНИЕ: buildNetState / applyNetState (поки не використовуються) =====
+
+  function buildNetState() {
+    // Збираємо мінімально необхідне для онлайн-синхронізації
+    return {
+      mode: gameState.mode,
+      game: {
+        gameStarted: gameState.gameStarted,
+        gameOver: gameState.gameOver,
+        paused: gameState.paused,
+        roundStartTime: gameState.roundStartTime,
+        pauseAccumulated: gameState.pauseAccumulated,
+        pauseStartedAt: gameState.pauseStartedAt,
+      },
+      single: {
+        player: { col: player.col, row: player.row },
+        facingDx,
+        facingDy,
+        desiredDx,
+        desiredDy,
+        lastMoveTime,
+        lastStepDx,
+        lastStepDy,
+        carryingBear,
+        savedBears,
+      },
+      local2: {
+        player1: {
+          col: player1.col,
+          row: player1.row,
+          facingDx: facingDx1,
+          facingDy: facingDy1,
+          desiredDx: desiredDx1,
+          desiredDy: desiredDy1,
+          lastMoveTime: lastMoveTime1,
+          lastStepDx: lastStepDx1,
+          lastStepDy: lastStepDy1,
+          carryingBear: carryingBear1,
+          savedBears: savedBears1,
+        },
+        player2: {
+          col: player2.col,
+          row: player2.row,
+          facingDx: facingDx2,
+          facingDy: facingDy2,
+          desiredDx: desiredDx2,
+          desiredDy: desiredDy2,
+          lastMoveTime: lastMoveTime2,
+          lastStepDx: lastStepDx2,
+          lastStepDy: lastStepDy2,
+          carryingBear: carryingBear2,
+          savedBears: savedBears2,
+        },
+      },
+      icebergs: icebergs.map((ice) => ({
+        row: ice.row,
+        col: ice.col,
+        variant: ice.variant,
+      })),
+      icebergTiming: {
+        lastIcebergMoveTime,
+        lastIcebergSpawnTime,
+      },
+    };
+  }
+
+  function applyNetState(state) {
+    if (!state || typeof state !== "object") return;
+
+    // Режим
+    if (typeof state.mode === "string") {
+      gameState.mode = state.mode;
+      gameMode = state.mode;
+    }
+
+    // Глобальний стан гри
+    if (state.game) {
+      const g = state.game;
+      if (typeof g.gameStarted === "boolean") gameState.gameStarted = g.gameStarted;
+      if (typeof g.gameOver === "boolean") gameState.gameOver = g.gameOver;
+      if (typeof g.paused === "boolean") gameState.paused = g.paused;
+      if (typeof g.roundStartTime === "number") gameState.roundStartTime = g.roundStartTime;
+      if (typeof g.pauseAccumulated === "number")
+        gameState.pauseAccumulated = g.pauseAccumulated;
+      if (g.pauseStartedAt === null || typeof g.pauseStartedAt === "number") {
+        gameState.pauseStartedAt = g.pauseStartedAt;
+      }
+    }
+
+    // Одиночний режим
+    if (state.single) {
+      const s = state.single;
+      if (s.player) {
+        if (typeof s.player.col === "number") player.col = s.player.col;
+        if (typeof s.player.row === "number") player.row = s.player.row;
+      }
+      if (typeof s.facingDx === "number") facingDx = s.facingDx;
+      if (typeof s.facingDy === "number") facingDy = s.facingDy;
+      if (typeof s.desiredDx === "number") desiredDx = s.desiredDx;
+      if (typeof s.desiredDy === "number") desiredDy = s.desiredDy;
+      if (typeof s.lastMoveTime === "number") lastMoveTime = s.lastMoveTime;
+      if (typeof s.lastStepDx === "number") lastStepDx = s.lastStepDx;
+      if (typeof s.lastStepDy === "number") lastStepDy = s.lastStepDy;
+      if (typeof s.carryingBear === "boolean") carryingBear = s.carryingBear;
+      if (typeof s.savedBears === "number") savedBears = s.savedBears;
+    }
+
+    // Локальний мультиплеєр (двох гравців)
+    if (state.local2) {
+      const l = state.local2;
+      if (l.player1) {
+        const p1 = l.player1;
+        if (typeof p1.col === "number") player1.col = p1.col;
+        if (typeof p1.row === "number") player1.row = p1.row;
+        if (typeof p1.facingDx === "number") facingDx1 = p1.facingDx;
+        if (typeof p1.facingDy === "number") facingDy1 = p1.facingDy;
+        if (typeof p1.desiredDx === "number") desiredDx1 = p1.desiredDx;
+        if (typeof p1.desiredDy === "number") desiredDy1 = p1.desiredDy;
+        if (typeof p1.lastMoveTime === "number") lastMoveTime1 = p1.lastMoveTime;
+        if (typeof p1.lastStepDx === "number") lastStepDx1 = p1.lastStepDx;
+        if (typeof p1.lastStepDy === "number") lastStepDy1 = p1.lastStepDy;
+        if (typeof p1.carryingBear === "boolean") carryingBear1 = p1.carryingBear;
+        if (typeof p1.savedBears === "number") savedBears1 = p1.savedBears;
+      }
+      if (l.player2) {
+        const p2 = l.player2;
+        if (typeof p2.col === "number") player2.col = p2.col;
+        if (typeof p2.row === "number") player2.row = p2.row;
+        if (typeof p2.facingDx === "number") facingDx2 = p2.facingDx;
+        if (typeof p2.facingDy === "number") facingDy2 = p2.facingDy;
+        if (typeof p2.desiredDx === "number") desiredDx2 = p2.desiredDx;
+        if (typeof p2.desiredDy === "number") desiredDy2 = p2.desiredDy;
+        if (typeof p2.lastMoveTime === "number") lastMoveTime2 = p2.lastMoveTime;
+        if (typeof p2.lastStepDx === "number") lastStepDx2 = p2.lastStepDx;
+        if (typeof p2.lastStepDy === "number") lastStepDy2 = p2.lastStepDy;
+        if (typeof p2.carryingBear === "boolean") carryingBear2 = p2.carryingBear;
+        if (typeof p2.savedBears === "number") savedBears2 = p2.savedBears;
+      }
+    }
+
+    // Айсберги
+    if (Array.isArray(state.icebergs)) {
+      icebergs = state.icebergs
+        .filter(
+          (ice) =>
+            ice &&
+            typeof ice.row === "number" &&
+            typeof ice.col === "number" &&
+            typeof ice.variant === "number"
+        )
+        .map((ice) => ({
+          row: ice.row,
+          col: ice.col,
+          variant: ice.variant,
+        }));
+    }
+
+    // Таймінги айсбергів
+    if (state.icebergTiming) {
+      const t = state.icebergTiming;
+      if (typeof t.lastIcebergMoveTime === "number")
+        lastIcebergMoveTime = t.lastIcebergMoveTime;
+      if (typeof t.lastIcebergSpawnTime === "number")
+        lastIcebergSpawnTime = t.lastIcebergSpawnTime;
+    }
+  }
+  function handleOnlineSync(now) {
+    // Якщо немає активної онлайн-кімнати — нічого не робимо
+    if (!onlineRoomId) return;
+
+    const helpers = getFirebaseHelpers();
+    if (!helpers) return;
+
+    const { db, refFn, setFn, getFn } = helpers;
+    const stateRef = refFn(db, `rooms/${onlineRoomId}/state`);
+
+    if (onlineIsHost) {
+      // МИ ХОСТ
+
+      // Обмежуємо частоту синхронізації
+      if (now - lastHostSyncTime < NET_SYNC_INTERVAL_MS) return;
+      lastHostSyncTime = now;
+
+      // 1) ОКРЕМО читаємо останню команду гостя (якщо є)
+      const inputRef = refFn(db, `rooms/${onlineRoomId}/inputs/guest`);
+
+      getFn(inputRef)
+        .then((snapshot) => {
+          if (!snapshot.exists()) {
+            // Немає вводу – зупиняємо другого гравця
+            if (typeof clearDirectionForPlayer === "function") {
+              clearDirectionForPlayer(2);
+            }
+            return;
+          }
+
+          const input = snapshot.val() || {};
+          const dx = Number(input.dx) || 0;
+          const dy = Number(input.dy) || 0;
+
+          if (dx === 0 && dy === 0) {
+            if (typeof clearDirectionForPlayer === "function") {
+              clearDirectionForPlayer(2);
+            }
+          } else {
+            if (typeof setDirectionForPlayer === "function") {
+              setDirectionForPlayer(2, dx, dy);
+            }
+          }
+        })
+        .catch((err) => {
+          console.error("Помилка читання вводу гостя:", err);
+        });
+
+      // 2) НЕЗАВИСИМО від get() завжди відправляємо стан гри
+      const netState = buildNetState();
+      setFn(stateRef, netState).catch((err) => {
+        console.error("Помилка запису стану кімнати (хост):", err);
+      });
+    } else {
+      // МИ ГОСТЬ — періодично читаємо стан і застосовуємо його
+      if (now - lastGuestSyncTime < NET_SYNC_INTERVAL_MS) return;
+      lastGuestSyncTime = now;
+
+      getFn(stateRef)
+        .then((snapshot) => {
+          if (!snapshot.exists()) return;
+          const netState = snapshot.val();
+          if (netState) {
+            applyNetState(netState);
+          }
+        })
+        .catch((err) => {
+          console.error("Помилка читання стану кімнати (гість):", err);
+        });
+    }
+  }
+
+
+
+  // ===== ДАЛЬШЕ — РИСОВАНИЕ И ЛОГИКА, КАК БЫЛО ======
 
   function drawPoleLabels() {
     const northHeight = northPoleRows * cellHeight;
@@ -546,6 +968,7 @@ window.addEventListener("DOMContentLoaded", () => {
 
     ctx.restore();
 
+    // Підпис гравця під човном — білий, щоб не зливался з кольором човна
     ctx.fillStyle = "#ffffff";
     ctx.font = "12px Segoe UI";
     ctx.textAlign = "center";
@@ -625,7 +1048,7 @@ window.addEventListener("DOMContentLoaded", () => {
     ctx.font = "16px Segoe UI";
     ctx.textBaseline = "middle";
 
-    if (gameMode === "local2") {
+    if (gameMode === "local2" || gameMode === "online2") {
       ctx.fillStyle = "#ffffff";
       ctx.textAlign = "left";
       ctx.fillText(`Гравець 1: ${savedBears1} ведмедів`, 10, y);
@@ -637,20 +1060,21 @@ window.addEventListener("DOMContentLoaded", () => {
       ctx.textAlign = "left";
       ctx.fillText(`Врятовано: ${savedBears} білих ведмедів`, 10, y);
     }
+
   }
 
   // ----- ТАЙМЕР -----
   function updateTimer(now) {
     let effectiveNow = now;
-    if (pauseStartedAt !== null) {
-      effectiveNow = pauseStartedAt;
+    if (gameState.pauseStartedAt !== null) {
+      effectiveNow = gameState.pauseStartedAt;
     }
 
-    const elapsed = effectiveNow - roundStartTime - pauseAccumulated;
+    const elapsed = effectiveNow - gameState.roundStartTime - gameState.pauseAccumulated;
     const remaining = ROUND_DURATION_MS - elapsed;
 
     if (remaining <= 0) {
-      gameOver = true;
+      gameState.gameOver = true;
       clearDirectionSingle();
       clearDirectionForPlayer(1);
       clearDirectionForPlayer(2);
@@ -669,15 +1093,15 @@ window.addEventListener("DOMContentLoaded", () => {
   function drawTimer(now) {
     let remaining;
 
-    if (!gameStarted) {
+    if (!gameState.gameStarted) {
       remaining = ROUND_DURATION_MS;
     } else {
       let effectiveNow = now;
-      if (pauseStartedAt !== null) {
-        effectiveNow = pauseStartedAt;
+      if (gameState.pauseStartedAt !== null) {
+        effectiveNow = gameState.pauseStartedAt;
       }
 
-      const elapsed = effectiveNow - roundStartTime - pauseAccumulated;
+      const elapsed = effectiveNow - gameState.roundStartTime - gameState.pauseAccumulated;
       remaining = Math.max(0, ROUND_DURATION_MS - elapsed);
     }
 
@@ -696,21 +1120,60 @@ window.addEventListener("DOMContentLoaded", () => {
     ctx.fillStyle = "rgba(0, 0, 0, 0.5)";
     ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-    ctx.fillStyle = "#ffffff";
-    ctx.font = "28px Segoe UI";
     ctx.textAlign = "center";
     ctx.textBaseline = "middle";
-    ctx.fillText("Час вийшов!", canvas.width / 2, canvas.height / 2 - 10);
 
-    const totalSaved =
-      gameMode === "local2" ? savedBears1 + savedBears2 : savedBears;
+    // Заголовок
+    ctx.fillStyle = "#ffffff";
+    ctx.font = "28px Segoe UI";
+    ctx.fillText("Час вийшов!", canvas.width / 2, canvas.height / 2 - 60);
 
-    ctx.font = "18px Segoe UI";
-    ctx.fillText(
-      `Врятовано: ${totalSaved} білих ведмедів`,
-      canvas.width / 2,
-      canvas.height / 2 + 20
-    );
+    if (gameMode === "local2" || gameMode === "online2") {
+      // Режим двох гравців: показуємо рахунок кожного і хто переміг
+      const yBase = canvas.height / 2 - 10;
+
+      ctx.font = "18px Segoe UI";
+
+      // Гравець 1 — помаранчевий
+      ctx.fillStyle = "#ffb347";
+      ctx.fillText(
+        `Гравець 1: ${savedBears1} ведмедів`,
+        canvas.width / 2,
+        yBase
+      );
+
+      // Гравець 2 — жовтий
+      ctx.fillStyle = "#ffe066";
+      ctx.fillText(
+        `Гравець 2: ${savedBears2} ведмедів`,
+        canvas.width / 2,
+        yBase + 26
+      );
+
+      // Хто переміг / нічия
+      ctx.fillStyle = "#ffffff";
+      ctx.font = "20px Segoe UI";
+
+      let winnerText;
+      if (savedBears1 > savedBears2) {
+        winnerText = "Переміг Гравець 1!";
+      } else if (savedBears2 > savedBears1) {
+        winnerText = "Переміг Гравець 2!";
+      } else {
+        winnerText = "Нічия — гарна команда!";
+      }
+
+      ctx.fillText(winnerText, canvas.width / 2, yBase + 56);
+    } else {
+      // Звичайний одиночний режим: як і було раніше
+      ctx.font = "18px Segoe UI";
+      ctx.fillStyle = "#ffffff";
+      ctx.fillText(
+        `Врятовано: ${savedBears} білих ведмедів`,
+        canvas.width / 2,
+        canvas.height / 2
+      );
+    }
   }
 
   // ----- ПОЛЮС / КОНТИНЕНТ -----
@@ -894,7 +1357,8 @@ window.addEventListener("DOMContentLoaded", () => {
   }
 
   function checkCollisionsWithIcebergs() {
-    if (gameMode === "local2") {
+    if (gameMode === "local2" || (gameMode === "online2" && onlineIsHost)) {
+      // два гравці: локальний мультиплеєр або хост в онлайн-режимі
       for (const iceberg of icebergs) {
         if (iceberg.row === player1.row && iceberg.col === player1.col) {
           handleIcebergCollisionFor(1);
@@ -904,6 +1368,7 @@ window.addEventListener("DOMContentLoaded", () => {
         }
       }
     } else {
+      // одиночний режим (включаючи гостя в online2 — він не рахує фізику)
       for (const iceberg of icebergs) {
         if (iceberg.row === player.row && iceberg.col === player.col) {
           handleIcebergCollisionSingle();
@@ -912,6 +1377,7 @@ window.addEventListener("DOMContentLoaded", () => {
       }
     }
   }
+
 
   function handleIcebergCollisionSingle() {
     if (carryingBear) carryingBear = false;
@@ -976,7 +1442,8 @@ window.addEventListener("DOMContentLoaded", () => {
 
   // Обгортка для сенсорного джойстика (керує Гравцем 1 у будь-якому режимі)
   function setDirection(dx, dy) {
-    if (gameMode === "local2") {
+    if (gameMode === "local2" || (gameMode === "online2" && onlineIsHost)) {
+      // сенсорний пульт керує Гравцем 1 у двогравцевих режимах
       setDirectionForPlayer(1, dx, dy);
     } else {
       setDirectionSingle(dx, dy);
@@ -984,12 +1451,13 @@ window.addEventListener("DOMContentLoaded", () => {
   }
 
   function clearDirection() {
-    if (gameMode === "local2") {
+    if (gameMode === "local2" || (gameMode === "online2" && onlineIsHost)) {
       clearDirectionForPlayer(1);
     } else {
       clearDirectionSingle();
     }
   }
+
 
   // ----- КЕРУВАННЯ З КЛАВІАТУРИ -----
   function setDirectionFromKeyboardEventSingle(e) {
@@ -1091,23 +1559,110 @@ window.addEventListener("DOMContentLoaded", () => {
     }
   }
 
+  function getDirectionFromArrowKey(e) {
+    switch (e.code) {
+      case "ArrowUp":
+        return { dx: 0, dy: -1 };
+      case "ArrowDown":
+        return { dx: 0, dy: 1 };
+      case "ArrowLeft":
+        return { dx: -1, dy: 0 };
+      case "ArrowRight":
+        return { dx: 1, dy: 0 };
+      default:
+        return null;
+    }
+  }
+
+  // НОВАЯ ФУНКЦИЯ: WASD + стрелки в одно направление
+  function getDirectionFromAnyKey(e) {
+    const code = e.code;
+    const key = e.key;
+
+    // Вверх
+    if (code === "KeyW" || key === "ArrowUp") {
+      return { dx: 0, dy: -1 };
+    }
+
+    // Вниз
+    if (code === "KeyS" || key === "ArrowDown") {
+      return { dx: 0, dy: 1 };
+    }
+
+    // Влево
+    if (code === "KeyA" || key === "ArrowLeft") {
+      return { dx: -1, dy: 0 };
+    }
+
+    // Вправо
+    if (code === "KeyD" || key === "ArrowRight") {
+      return { dx: 1, dy: 0 };
+    }
+
+    return null;
+  }
+
   window.addEventListener("keydown", (e) => {
+    // ----- ONLINE2: двоє гравців на різних пристроях -----
+    if (gameMode === "online2") {
+      const dir = getDirectionFromAnyKey(e);
+      if (!dir) return;
+
+      e.preventDefault(); // щоб не скролилася сторінка
+
+      if (onlineIsHost) {
+        // Хост: будь-які WASD/стрілки керують Гравцем 1
+        setDirectionForPlayer(1, dir.dx, dir.dy);
+      } else {
+        // Гість: будь-які WASD/стрілки шле на сервер для Гравця 2
+        sendGuestInput(dir.dx, dir.dy);
+      }
+      return;
+    }
+
+    // ----- LOCAL2: двоє на одному пристрої -----
     if (gameMode === "local2") {
       handleKeyDownLocal2(e);
-    } else {
-      setDirectionFromKeyboardEventSingle(e);
+      return;
+    }
+
+    // ----- SINGLE: звичайний одиночний режим -----
+    setDirectionFromKeyboardEventSingle(e);
+  });
+
+
+  window.addEventListener("keyup", (e) => {
+    // ----- ONLINE2 -----
+    if (gameMode === "online2") {
+      const dir = getDirectionFromAnyKey(e);
+      if (!dir) return;
+
+      e.preventDefault();
+
+      if (onlineIsHost) {
+        // Хост: відпустили будь-яку клавішу руху — зупиняємо корабель 1
+        clearDirectionForPlayer(1);
+      } else {
+        // Гість: шлемо (0,0), щоб зупинити корабель 2 у хоста
+        sendGuestInput(0, 0);
+      }
+      return;
+    }
+
+    // ----- LOCAL2 -----
+    if (gameMode === "local2") {
+      handleKeyUpLocal2(e);
+      return;
+    }
+
+    // ----- SINGLE -----
+    if (isMovementKeyboardEventSingle(e)) {
+      clearDirectionSingle();
     }
   });
 
-  window.addEventListener("keyup", (e) => {
-    if (gameMode === "local2") {
-      handleKeyUpLocal2(e);
-    } else {
-      if (isMovementKeyboardEventSingle(e)) {
-        clearDirectionSingle();
-      }
-    }
-  });
+
+
 
   // ----- ДЖОЙСТИК (сенсорні кнопки) -----
   const btnUp = document.getElementById("btn-up");
@@ -1120,18 +1675,33 @@ window.addEventListener("DOMContentLoaded", () => {
 
     btn.addEventListener("pointerdown", (e) => {
       e.preventDefault();
-      setDirection(dx, dy);
+
+      if (gameMode === "online2" && !onlineIsHost) {
+        // Гість: кнопки керують другим кораблем через мережу
+        sendGuestInput(dx, dy);
+      } else {
+        // Одиночка, локальний мультиплеєр або хост online2
+        // керують локальним Гравцем 1
+        setDirection(dx, dy);
+      }
     });
 
     const stop = (e) => {
       e.preventDefault();
-      clearDirection();
+
+      if (gameMode === "online2" && !onlineIsHost) {
+        // Гість відпустив кнопку — стоп для корабля 2
+        sendGuestInput(0, 0);
+      } else {
+        clearDirection();
+      }
     };
 
     btn.addEventListener("pointerup", stop);
     btn.addEventListener("pointerleave", stop);
     btn.addEventListener("pointercancel", stop);
   }
+
 
   attachButtonControls(btnUp, 0, -1);
   attachButtonControls(btnDown, 0, 1);
@@ -1168,7 +1738,7 @@ window.addEventListener("DOMContentLoaded", () => {
   if (btnPause) {
     btnPause.addEventListener("click", () => {
       // 1) Якщо гру ще не запускали або раунд закінчився — це кнопка СТАРТ
-      if (!gameStarted || gameOver) {
+      if (!gameState.gameStarted || gameState.gameOver) {
         const intro = document.getElementById("intro");
         const aboutOverlay = document.getElementById("aboutOverlay");
         if (intro) intro.style.display = "none";
@@ -1180,15 +1750,15 @@ window.addEventListener("DOMContentLoaded", () => {
       }
 
       // 2) Інакше — звичайний режим ПАУЗА / СТАРТ
-      if (!paused) {
-        paused = true;
-        pauseStartedAt = Date.now();
+      if (!gameState.paused) {
+        gameState.paused = true;
+        gameState.pauseStartedAt = Date.now();
         btnPause.textContent = "СТАРТ";
       } else {
-        paused = false;
-        if (pauseStartedAt !== null) {
-          pauseAccumulated += Date.now() - pauseStartedAt;
-          pauseStartedAt = null;
+        gameState.paused = false;
+        if (gameState.pauseStartedAt !== null) {
+          gameState.pauseAccumulated += Date.now() - gameState.pauseStartedAt;
+          gameState.pauseStartedAt = null;
         }
         btnPause.textContent = "ПАУЗА";
       }
@@ -1209,7 +1779,7 @@ window.addEventListener("DOMContentLoaded", () => {
   const modeLocal2Btn = document.getElementById("mode-local2");
   const modeOnline2Btn = document.getElementById("mode-online2");
   const controlPad = document.getElementById("controlPad");
-  
+
   // Визначаємо, чи схоже, що це телефон / планшет
   const isProbablyTouch =
     "ontouchstart" in window || (navigator.maxTouchPoints || 0) > 0;
@@ -1233,6 +1803,7 @@ window.addEventListener("DOMContentLoaded", () => {
   if (modeSingleBtn && modeOverlay) {
     modeSingleBtn.addEventListener("click", () => {
       gameMode = "single";
+      gameState.mode = "single";
       modeOverlay.style.display = "none";
       if (controlPad) controlPad.style.display = "flex";
     });
@@ -1241,6 +1812,7 @@ window.addEventListener("DOMContentLoaded", () => {
   if (modeLocal2Btn && modeOverlay) {
     modeLocal2Btn.addEventListener("click", () => {
       gameMode = "local2";
+      gameState.mode = "local2";
       modeOverlay.style.display = "none";
       if (controlPad) controlPad.style.display = "none"; // ховаємо круг з сенсорними стрілками
     });
@@ -1248,8 +1820,32 @@ window.addEventListener("DOMContentLoaded", () => {
 
   if (modeOnline2Btn && modeOverlay) {
     modeOnline2Btn.addEventListener("click", () => {
-      alert('Режим "Двоє гравців онлайн" поки що у розробці. Оберіть інший режим.');
-      // gameMode при цьому не змінюємо, залишається попередній (типово "single")
+      const input = prompt(
+        'Режим "Двоє гравців онлайн".\n\n' +
+          "Введіть код кімнати, щоб приєднатися як Гравець 2,\n" +
+          "або залиште поле порожнім, щоб створити нову кімнату як хост."
+      );
+
+      if (input === null) {
+        // користувач натиснув Cancel
+        return;
+      }
+
+      const code = input.trim();
+      if (code === "") {
+        // створюємо нову кімнату (хост)
+        createOnlineRoomAsHost();
+      } else {
+        // намагаємося приєднатися як гість
+        joinOnlineRoomAsGuest(code);
+      }
+
+      // Після успішного вибору онлайн-режиму:
+      // 1) переключаємо режим гри на online2
+      // 2) ховаємо вікно вибору режиму
+      gameMode = "online2";
+      gameState.mode = "online2"; // <- ДОДАТИ ЦЮ РЯДОК
+      modeOverlay.style.display = "none";
     });
   }
 
@@ -1284,5 +1880,5 @@ window.addEventListener("DOMContentLoaded", () => {
   // ----- ЗАПУСК -----
   resetPlayerPositionSingle();
   // Гру не запускаємо автоматично — чекаємо на натискання "СТАРТ" або "СПОЧАТКУ"
-  draw();
+  loop();
 });

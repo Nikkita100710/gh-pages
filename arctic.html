@@ -588,7 +588,45 @@
       </div>
     </main>
   </div>
+    <!-- Firebase: підключення через CDN -->
+  <!-- Firebase: підключення через CDN -->
+  <!-- Firebase: підключення через CDN -->
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-app.js";
+  import {
+    getDatabase,
+    ref,
+    set,
+    get
+  } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-database.js";
 
+  const firebaseConfig = {
+    apiKey: "AIzaSyCDJHv9TPBLraYqH3Q6cgivk_yacoz-WrI",
+    authDomain: "arcticrescue-d5def.firebaseapp.com",
+    databaseURL: "https://arcticrescue-d5def-default-rtdb.europe-west1.firebasedatabase.app",
+    projectId: "arcticrescue-d5def",
+    storageBucket: "arcticrescue-d5def.firebasestorage.app",
+    messagingSenderId: "325390197226",
+    appId: "1:325390197226:web:e33ef03df7293bf0d15293"
+  };
+
+  const app = initializeApp(firebaseConfig);
+  const db = getDatabase(app);
+
+  console.log("Firebase ініціалізовано", app);
+
+  // робимо доступним для arctic.js
+  window.arcticFirebase = {
+    app,
+    db,
+    refFn: ref,
+    setFn: set,
+    getFn: get
+  };
+</script>
+
+  <!-- твоя гра -->
   <script src="arctic.js"></script>
+
 </body>
 </html>
