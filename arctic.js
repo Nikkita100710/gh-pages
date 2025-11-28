@@ -53,6 +53,7 @@ window.addEventListener("DOMContentLoaded", () => {
   // ----- ОНЛАЙН-РЕЖИМ (заготовка для Firebase) -----
   let onlineRoomId = null;
   let onlineIsHost = false;
+  let guestPollIntervalId = null; // інтервал очікування гостя
 
   // Невеличкий інтервал синхронізації (приблизно 7 разів на секунду)
   const NET_SYNC_INTERVAL_MS = 80;
@@ -92,21 +93,61 @@ window.addEventListener("DOMContentLoaded", () => {
 
 
   function generateRoomId(length = 4) {
-    const alphabet = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789"; // без 0, 1, O, I
+    // Тепер код складається тільки з цифр, наприклад: 0273, 9041 тощо
+    const digits = "0123456789";
     let id = "";
     for (let i = 0; i < length; i++) {
-      const index = Math.floor(Math.random() * alphabet.length);
-      id += alphabet[index];
+      const index = Math.floor(Math.random() * digits.length);
+      id += digits[index];
     }
     return id;
+  }
+
+
+  function startWaitingForGuest() {
+    const helpers = getFirebaseHelpers();
+    if (!helpers) return;
+    const { db, refFn, getFn } = helpers;
+
+    // якщо щось не так — не запускаємо інтервал
+    if (!onlineRoomId || !onlineIsHost) return;
+
+    // інтервал вже запущено
+    if (guestPollIntervalId !== null) return;
+
+    guestPollIntervalId = setInterval(() => {
+      // якщо кімната/хост змінились або гість вже є — зупиняємо інтервал
+      if (!onlineRoomId || !onlineIsHost || onlineGuestJoined) {
+        clearInterval(guestPollIntervalId);
+        guestPollIntervalId = null;
+        return;
+      }
+
+      const guestRef = refFn(db, `rooms/${onlineRoomId}/guest`);
+      getFn(guestRef)
+        .then((snapshot) => {
+          if (snapshot.exists()) {
+            onlineGuestJoined = true;
+            clearInterval(guestPollIntervalId);
+            guestPollIntervalId = null;
+            alert("Гість приєднався до кімнати! Можна починати гру.");
+          }
+        })
+        .catch((err) => {
+          console.error("Помилка перевірки підключення гостя:", err);
+        });
+    }, 500); // раз на півсекунди перевіряємо, чи гість уже є
   }
 
   function createOnlineRoomAsHost() {
     const helpers = getFirebaseHelpers();
     if (!helpers) {
-      alert("Онлайн-режим тимчасово недоступний (немає з'єднання з Firebase).");
+      alert(
+        'Онлайн-режим тимчасово недоступний (немає з\'єднання з Firebase).'
+      );
       return;
     }
+
 
     const { db, refFn, setFn } = helpers;
 
@@ -130,10 +171,17 @@ window.addEventListener("DOMContentLoaded", () => {
       .then(() => {
         onlineRoomId = roomId;
         onlineIsHost = true;
+        onlineGuestJoined = false;
+
+        // запускаємо очікування гостя ще до старту гри
+        startWaitingForGuest();
+
         alert(
-          `Створено онлайн-кімнату.\nКод: ${roomId}\n\nСам режим ще у розробці, але запис у базі вже працює.`
+          `Створено онлайн-кімнату.\nКод: ${roomId}\n\nОчікуємо на приєднання гостя.`
         );
       })
+
+
       .catch((err) => {
         console.error("Помилка створення кімнати:", err);
         alert("Не вдалося створити кімнату. Спробуйте пізніше.");
@@ -663,6 +711,21 @@ function updateGame(now) {
       if (now - lastHostSyncTime < NET_SYNC_INTERVAL_MS) return;
       lastHostSyncTime = now;
 
+      // Додатково: перевіряємо, чи вже є гість у кімнаті
+      if (!onlineGuestJoined) {
+        const guestRef = refFn(db, `rooms/${onlineRoomId}/guest`);
+        getFn(guestRef)
+          .then((snapshot) => {
+            if (snapshot.exists()) {
+              onlineGuestJoined = true;
+              alert("Гість приєднався до кімнати! Можна починати гру.");
+            }
+          })
+          .catch((err) => {
+            console.error("Помилка перевірки підключення гостя:", err);
+          });
+      }
+
       // 1) ОКРЕМО читаємо останню команду гостя (якщо є)
       const inputRef = refFn(db, `rooms/${onlineRoomId}/inputs/guest`);
 
@@ -700,6 +763,7 @@ function updateGame(now) {
         console.error("Помилка запису стану кімнати (хост):", err);
       });
     } else {
+
       // МИ ГОСТЬ — періодично читаємо стан і застосовуємо його
       if (now - lastGuestSyncTime < NET_SYNC_INTERVAL_MS) return;
       lastGuestSyncTime = now;
@@ -1739,6 +1803,15 @@ function updateGame(now) {
     btnPause.addEventListener("click", () => {
       // 1) Якщо гру ще не запускали або раунд закінчився — це кнопка СТАРТ
       if (!gameState.gameStarted || gameState.gameOver) {
+        // У онлайн-режимі хост НЕ може стартувати, поки гість не приєднався
+        if (gameMode === "online2" && onlineIsHost && !onlineGuestJoined) {
+          alert(
+            "Гість ще не приєднався до кімнати.\n" +
+              "Дочекайтеся гостя, а потім натисніть СТАРТ."
+          );
+          return;
+        }
+
         const intro = document.getElementById("intro");
         const aboutOverlay = document.getElementById("aboutOverlay");
         if (intro) intro.style.display = "none";
@@ -1748,6 +1821,7 @@ function updateGame(now) {
         btnPause.textContent = "ПАУЗА";
         return;
       }
+
 
       // 2) Інакше — звичайний режим ПАУЗА / СТАРТ
       if (!gameState.paused) {
@@ -1822,8 +1896,8 @@ function updateGame(now) {
     modeOnline2Btn.addEventListener("click", () => {
       const input = prompt(
         'Режим "Двоє гравців онлайн".\n\n' +
-          "Введіть код кімнати, щоб приєднатися як Гравець 2,\n" +
-          "або залиште поле порожнім, щоб створити нову кімнату як хост."
+        "Щоб зіграти онлайн, введіть 4-значний код кімнати (якщо вам його сказав друг).\n" +
+        "Або залиште поле порожнім, щоб створити нову кімнату як хост."
       );
 
       if (input === null) {
