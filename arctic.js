@@ -50,15 +50,21 @@ window.addEventListener("DOMContentLoaded", () => {
     pauseAccumulated: 0,  // сумарний час у паузі
     pauseStartedAt: null,
   };
-  // ----- ОНЛАЙН-РЕЖИМ (заготовка для Firebase) -----
+  // ----- ОНЛАЙН-РЕЖИМ (Firebase) -----
   let onlineRoomId = null;
   let onlineIsHost = false;
-  let guestPollIntervalId = null; // інтервал очікування гостя
+  let onlineGuestJoined = false;   // чи є вже гість
 
-  // Невеличкий інтервал синхронізації (приблизно 7 разів на секунду)
+  // Інтервал синхронізації стану
   const NET_SYNC_INTERVAL_MS = 80;
   let lastHostSyncTime = 0;
   let lastGuestSyncTime = 0;
+
+  // Зворотний відлік перед стартом онлайн-раунду
+  let preGameCountdownSeconds = 0;
+  let preGameCountdownTimerId = null;
+
+
 
 
   function getFirebaseHelpers() {
@@ -68,7 +74,46 @@ window.addEventListener("DOMContentLoaded", () => {
     if (!db || !refFn || !setFn || !getFn) return null;
     return { db, refFn, setFn, getFn };
   }
+    function startPreGameCountdown(isHost) {
+    const overlay = document.getElementById("countdownOverlay");
+    const numberEl = document.getElementById("countdownNumber");
+    if (!overlay || !numberEl) return;
+
+    // якщо відлік вже йде – не запускаємо повторно
+    if (preGameCountdownTimerId !== null) return;
+
+    preGameCountdownSeconds = 5;
+    numberEl.textContent = preGameCountdownSeconds.toString();
+    overlay.style.display = "flex";
+
+    preGameCountdownTimerId = setInterval(() => {
+      preGameCountdownSeconds -= 1;
+
+      if (preGameCountdownSeconds <= 0) {
+        clearInterval(preGameCountdownTimerId);
+        preGameCountdownTimerId = null;
+        overlay.style.display = "none";
+
+        if (isHost) {
+          // Стартуємо раунд тільки у хоста
+          if (!gameState.gameStarted || gameState.gameOver) {
+            const intro = document.getElementById("intro");
+            const aboutOverlay = document.getElementById("aboutOverlay");
+            if (intro) intro.style.display = "none";
+            if (aboutOverlay) aboutOverlay.style.display = "none";
+
+            startGame();
+            const btnPause = document.getElementById("btn-pause");
+            if (btnPause) btnPause.textContent = "ПАУЗА";
+          }
+        }
+      } else {
+        numberEl.textContent = preGameCountdownSeconds.toString();
+      }
+    }, 1000);
+  }
   // Відправка команд керування від гостя до Firebase
+
   function sendGuestInput(dx, dy) {
     // Працює тільки якщо ми в онлайн-режимі і є кімната
     if (!onlineRoomId || onlineIsHost === true) return;
@@ -104,40 +149,6 @@ window.addEventListener("DOMContentLoaded", () => {
   }
 
 
-  function startWaitingForGuest() {
-    const helpers = getFirebaseHelpers();
-    if (!helpers) return;
-    const { db, refFn, getFn } = helpers;
-
-    // якщо щось не так — не запускаємо інтервал
-    if (!onlineRoomId || !onlineIsHost) return;
-
-    // інтервал вже запущено
-    if (guestPollIntervalId !== null) return;
-
-    guestPollIntervalId = setInterval(() => {
-      // якщо кімната/хост змінились або гість вже є — зупиняємо інтервал
-      if (!onlineRoomId || !onlineIsHost || onlineGuestJoined) {
-        clearInterval(guestPollIntervalId);
-        guestPollIntervalId = null;
-        return;
-      }
-
-      const guestRef = refFn(db, `rooms/${onlineRoomId}/guest`);
-      getFn(guestRef)
-        .then((snapshot) => {
-          if (snapshot.exists()) {
-            onlineGuestJoined = true;
-            clearInterval(guestPollIntervalId);
-            guestPollIntervalId = null;
-            alert("Гість приєднався до кімнати! Можна починати гру.");
-          }
-        })
-        .catch((err) => {
-          console.error("Помилка перевірки підключення гостя:", err);
-        });
-    }, 500); // раз на півсекунди перевіряємо, чи гість уже є
-  }
 
   function createOnlineRoomAsHost() {
     const helpers = getFirebaseHelpers();
@@ -173,19 +184,15 @@ window.addEventListener("DOMContentLoaded", () => {
         onlineIsHost = true;
         onlineGuestJoined = false;
 
-        // запускаємо очікування гостя ще до старту гри
-        startWaitingForGuest();
-
         alert(
           `Створено онлайн-кімнату.\nКод: ${roomId}\n\nОчікуємо на приєднання гостя.`
         );
       })
-
-
       .catch((err) => {
         console.error("Помилка створення кімнати:", err);
         alert("Не вдалося створити кімнату. Спробуйте пізніше.");
       });
+
   }
   function joinOnlineRoomAsGuest(roomIdRaw) {
     const helpers = getFirebaseHelpers();
@@ -232,12 +239,12 @@ window.addEventListener("DOMContentLoaded", () => {
         // якщо сюди дійшли — кімната існує і запис гостя успішний
         onlineRoomId = roomId;
         onlineIsHost = false;
+        onlineGuestJoined = true;
 
-        alert(
-          `Ви приєдналися до кімнати з кодом ${roomId}.\n\n` +
-          "Онлайн-режим ще у розробці, але підключення до кімнати вже працює."
-        );
+        // запускаємо зворотний відлік для гостьового екрана
+        startPreGameCountdown(false);
       })
+
       .catch((err) => {
         if (err && err.message === "room-not-found") {
           // це «нормальна» ситуація, ми вже показали alert вище
@@ -711,14 +718,15 @@ function updateGame(now) {
       if (now - lastHostSyncTime < NET_SYNC_INTERVAL_MS) return;
       lastHostSyncTime = now;
 
-      // Додатково: перевіряємо, чи вже є гість у кімнаті
+      // Якщо гість ще не позначений як під'єднаний — перевіряємо в базі
       if (!onlineGuestJoined) {
         const guestRef = refFn(db, `rooms/${onlineRoomId}/guest`);
         getFn(guestRef)
           .then((snapshot) => {
             if (snapshot.exists()) {
               onlineGuestJoined = true;
-              alert("Гість приєднався до кімнати! Можна починати гру.");
+              // запускаємо зворотний відлік на боці хоста
+              startPreGameCountdown(true);
             }
           })
           .catch((err) => {
@@ -1803,11 +1811,12 @@ function updateGame(now) {
     btnPause.addEventListener("click", () => {
       // 1) Якщо гру ще не запускали або раунд закінчився — це кнопка СТАРТ
       if (!gameState.gameStarted || gameState.gameOver) {
-        // У онлайн-режимі хост НЕ може стартувати, поки гість не приєднався
-        if (gameMode === "online2" && onlineIsHost && !onlineGuestJoined) {
+
+        // В онлайн-режимі перший раунд стартує автоматично після зворотного відліку
+        if (gameMode === "online2") {
           alert(
-            "Гість ще не приєднався до кімнати.\n" +
-              "Дочекайтеся гостя, а потім натисніть СТАРТ."
+            "В онлайн-режимі раунд почнеться автоматично,\n" +
+            "коли гість під'єднається і завершиться зворотний відлік."
           );
           return;
         }
@@ -1821,6 +1830,7 @@ function updateGame(now) {
         btnPause.textContent = "ПАУЗА";
         return;
       }
+
 
 
       // 2) Інакше — звичайний режим ПАУЗА / СТАРТ
