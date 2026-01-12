@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Розклад 10-B</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:'Segoe UI',sans-serif;background:linear-gradient(135deg,#667eea 0%,#764ba2 100%);padding:20px;min-height:100vh}
+.container{max-width:900px;margin:0 auto}
+.header{background:#fff;border-radius:16px;padding:20px;margin-bottom:20px;box-shadow:0 4px 16px rgba(0,0,0,.15)}
+.nav-controls{display:flex;align-items:center;justify-content:space-between;gap:16px;margin-bottom:12px}
+.nav-button{background:#667eea;color:#fff;border:none;border-radius:12px;padding:12px 24px;font-size:1.5em;cursor:pointer;transition:all .2s;font-weight:600;min-width:60px;box-shadow:0 2px 8px rgba(102,126,234,.3)}
+.nav-button:hover:not(:disabled){background:#5568d3;transform:scale(1.05)}
+.nav-button:disabled{background:#ccc;cursor:not-allowed}
+.day-pill{background:#fff;padding:12px 24px;border-radius:24px;box-shadow:0 2px 8px rgba(0,0,0,.1);flex:1;text-align:center}
+.day-name{font-size:1.8em;font-weight:bold;color:#333;margin-bottom:4px}
+.day-date{font-size:1.1em;color:#667eea;font-weight:500}.day-date .today-link{color:#28a745;cursor:pointer;text-decoration:underline;font-weight:600}.day-date .today-link:hover{color:#218838}
+.btn-today{display:none}
+.day-card{background:#fff;border-radius:16px;padding:24px;box-shadow:0 4px 16px rgba(0,0,0,.15)}
+.day-card.today{background:#d4edda;border:3px solid #28a745}
+table{width:100%;border-collapse:collapse}
+th{background:#667eea;color:#fff;padding:10px;text-align:left;font-weight:600;font-size:.85em}
+th:first-child{border-top-left-radius:8px}
+th:last-child{border-top-right-radius:8px}
+td{padding:10px;vertical-align:middle;transition:background-color 240ms ease,color 240ms ease}
+tr:nth-child(even) td{background:#f8f9fa}
+tr:nth-child(odd) td{background:#fff}
+tr.current td{background:#dc3545!important;color:#fff!important}
+tr.next td{background:#90ee90!important;color:#000!important}
+.col-num{width:5.5%;text-align:left;font-weight:600;padding-right:4px;font-size:0.85em}
+.col-time{width:18%;text-align:left;font-weight:600;line-height:1.15;white-space:nowrap;font-size:0.8em}
+.col-subject{width:42%;text-align:center}
+.col-teacher{width:30.5%;text-align:left;font-size:.7em;line-height:1.35;padding-left:12px}
+.subject-name{font-weight:bold;margin-bottom:4px;font-size:0.85em}
+.subject-icons{display:flex;gap:12px;margin-top:4px;justify-content:center}
+.icon-button{display:inline-flex;align-items:center;justify-content:center;width:44px;height:44px;padding:10px;border:none;background:transparent;cursor:pointer;border-radius:6px;transition:transform .2s}
+.icon-button:hover:not(.disabled){transform:scale(1.1);background:rgba(102,126,234,.1)}
+.icon-button.disabled{opacity:.38;filter:grayscale(1);cursor:not-allowed}
+.icon-button svg{width:26px;height:26px}
+.teacher-name{display:flex;flex-direction:column;gap:2px}
+@media (max-width:640px){
+body{padding:10px}
+.header{padding:14px}
+.day-name{font-size:1.4em}
+.day-date{font-size:.95em}
+.nav-button{padding:8px 14px;font-size:1.1em;min-width:42px}
+.day-card{padding:16px}
+td{padding:8px}
+th{padding:8px;font-size:.88em}
+.col-time{font-size:0.82em}
+.subject-name{font-size:.94em}
+.col-teacher{font-size:.70em}
+.icon-button{width:40px;height:40px;padding:8px}
+.icon-button svg{width:24px;height:24px}
+}
+</style>
+</head>
+<body>
+<div class="container">
+  <div class="header">
+    <div class="nav-controls">
+      <button class="nav-button" id="btnPrev"><svg width="24" height="24" viewBox="0 0 24 24" fill="white"><path d="M15.41 7.41L14 6l-6 6 6 6 1.41-1.41L10.83 12z"/></svg></button>
+      <div class="day-pill">
+        <div class="day-name" id="dayName">Понеділок</div>
+        <div class="day-date" id="dayDate">12 листопада</div>
+      </div>
+      <button class="nav-button" id="btnNext"><svg width="24" height="24" viewBox="0 0 24 24" fill="white"><path d="M10 6L8.59 7.41 13.17 12l-4.58 4.59L10 18l6-6z"/></svg></button>
+    </div>
+  </div>
+  <div class="day-card" id="dayCard">
+    <table>
+      <thead>
+        <tr>
+          <th class="col-num">№</th>
+          <th class="col-time">Час</th>
+          <th class="col-subject">Предмет</th>
+          <th class="col-teacher">Викладач</th>
+        </tr>
+      </thead>
+      <tbody id="scheduleBody"></tbody>
+    </table>
+  </div>
+</div>
+<script>
+const D={"Понеділок":[{lesson:1,time:"08:30 - 09:15",subject:"Фізика",classroom:"https://classroom.google.com/c/Nzc0NzM1NjczOTE5?hl=ru&cjc=qy3dlysq",teacher:"Голованова Олена Іванівна",textbook:"https://drive.google.com/file/d/12AaobJ2xtqEwijNQlzRJqsJSj33qafnB/view?usp=sharing"},{lesson:2,time:"09:25 - 10:10",subject:"Інформатика",classroom:"https://classroom.google.com/c/ODAwMTQ2Njc4NTY1?cjc=ho5zmum4",teacher:"Гончарова Марина Іллівна",textbook:""},{lesson:3,time:"10:20 - 11:05",subject:"Англійська мова",classroom:"https://classroom.google.com/c/Nzk5NTk5NDUyMjYy",teacher:"Яценко Юлія Віталіївна",textbook:"https://drive.google.com/file/d/1wcK4TAuiL5tnRMb9ZbUZ1Zg3omQicvVe/view"},{lesson:4,time:"11:25 - 12:10",subject:"Історія",classroom:"https://classroom.google.com/c/Nzk5NzIwNDU1ODgw?cjc=kq4e7c2h",teacher:"Гочошвілі Інна Олександрівна",textbook:"https://drive.google.com/file/d/1ThZ0fQnN7lCV_9Yjsg9iwdrV8qVT7Ouc/view?usp=sharing"},{lesson:5,time:"12:20 - 13:05",subject:"Українська літ-ра",classroom:"https://classroom.google.com/c/ODAwOTQ2MzAxNjU",teacher:"Федіна Людмила Миколаївна",textbook:""},{lesson:6,time:"13:15 - 14:00",subject:"Мат-ка (Алгебра)",classroom:"https://classroom.google.com/c/Nzc0ODI0NzY0MTEx?cjc=yenslicy",teacher:"Кіляновська Ірина Володимирівна",textbook:"https://drive.google.com/file/d/1zi23AnoLLWisWQ0RiLbsowictHg3FAgH/view?usp=sharing"},{lesson:7,time:"14:10 - 14:55",subject:"Мат-ка (Алгебра)",classroom:"https://classroom.google.com/c/Nzc0ODI0NzY0MTEx?cjc=yenslicy",teacher:"Кіляновська Ірина Володимирівна",textbook:"https://drive.google.com/file/d/1zi23AnoLLWisWQ0RiLbsowictHg3FAgH/view?usp=sharing"}],"Вівторок":[{lesson:1,time:"08:30 - 09:15",subject:"Мат-ка (Алгебра)",classroom:"https://classroom.google.com/c/Nzc0ODI0NzY0MTEx",teacher:"Кіляновська Ірина Володимирівна",textbook:"https://drive.google.com/file/d/1zi23AnoLLWisWQ0RiLbsowictHg3FAgH/view?usp=sharing"},
+{lesson:2,time:"09:25 - 10:10",subject:"Географія",classroom:"https://classroom.google.com/c/ODAwMTkzMDk2ODYx?hl=ru&cjc=4rqsrxdb",teacher:"Санагурська Вікторія Миколаївна",textbook:"https://drive.google.com/file/d/174D-ESklMxlDrfeTdcJfsthk2BJbobQO/view?usp=sharing"},{lesson:3,time:"10:20 - 11:05",subject:"Захист України",classroom:"https://classroom.google.com/c/NzgwMTQ3MjM1MDI4?cjc=6h5qkuiv",teacher:"Ржавський Юрій Миколайович",textbook:""},{lesson:4,time:"11:25 - 12:10",subject:"Англійська мова",classroom:"https://classroom.google.com/c/Nzk5NTk5NDUyMjYy",teacher:"Яценко Юлія Віталіївна",textbook:"https://drive.google.com/file/d/1wcK4TAuiL5tnRMb9ZbUZ1Zg3omQicvVe/view"},{lesson:5,time:"12:20 - 13:05",subject:"Історія",classroom:"https://classroom.google.com/c/Nzk5NzIwNDU1ODgw?cjc=kq4e7c2h",teacher:"Гочошвілі Інна Олександрівна",textbook:"https://drive.google.com/file/d/1ThZ0fQnN7lCV_9Yjsg9iwdrV8qVT7Ouc/view?usp=sharing"},{lesson:6,time:"13:15 - 14:00",subject:"Заруб. літ-ра",classroom:"https://classroom.google.com/c/Nzk5NTk5NDUyMjYy",teacher:"Яценко Юлія Віталіївна",textbook:"https://drive.google.com/file/d/1VAVmeJhgY64xdjkpeP_rDRCy6hLH03BE/view?usp=sharing"},{lesson:7,time:"14:10 - 14:55",subject:"Фіз-ра",classroom:"https://classroom.google.com/c/Nzk5OTk3OTc4MDUx?cjc=lnxdivpz",teacher:"Пушкарук Микола Володимирович",textbook:"https://meet.google.com/mth-upyh-fbv"}],"Середа":[{lesson:1,time:"08:30 - 09:15",subject:"Мат-ка (Геометрiя)",classroom:"https://classroom.google.com/c/ODAwMTg4NDI4MzA2",teacher:"Кіляновська Ірина Володимирівна",textbook:"https://drive.google.com/file/d/1zi23AnoLLWisWQ0RiLbsowictHg3FAgH/view?usp=sharing"},{lesson:2,time:"09:25 - 10:10",subject:"Біологія",classroom:"https://classroom.google.com/c/Nzk5Mjk4MzExMTI1?cjc=nesnovco",teacher:"Писарева Лариса Петрівна",textbook:"https://drive.google.com/file/d/1TnyUqMrfTY1fm07Tam-7_wCFs85QQoDA/view?usp=sharing"},{lesson:3,time:"10:20 - 11:05",subject:"Українська мова",classroom:"https://classroom.google.com/c/ODAwOTQ2MzAxNjUз",teacher:"Федіна Людмила Миколаївна",textbook:""},{lesson:4,time:"11:25 - 12:10",subject:"Фізика",classroom:"https://classroom.google.com/c/Nzc0NzM1NjczOTE5?hl=ru&cjc=qy3dlysq",teacher:"Голованова Олена Іванівна",textbook:"https://drive.google.com/file/d/12AaobJ2xtqEwijNQlzRJqsJSj33qafnB/view?usp=sharing"},{lesson:5,time:"12:20 - 13:05",subject:"Англійська мова",classroom:"https://classroom.google.com/c/Nzk5NTk5NDUyMjYy",teacher:"Яценко Юлія Віталіївна",textbook:"https://drive.google.com/file/d/1wcK4TAuiL5tnRMb9ZbUZ1Zg3omQicvVe/view"},{lesson:6,time:"13:15 - 14:00",subject:"Українська мова",classroom:"https://classroom.google.com/c/ODAwOTQ2MzAxNjUз",teacher:"Федіна Людмила Миколаївна",textbook:""}],"Четвер":[{lesson:1,time:"08:30 - 09:15",subject:"Англійська мова",classroom:"https://classroom.google.com/c/Nzk5NTk5NDUyMjYy",teacher:"Яценко Юлія Віталіївна",textbook:"https://drive.google.com/file/d/1wcK4TAuiL5tnRMb9ZbUZ1Zg3omQicvVe/view"},{lesson:2,time:"09:25 - 10:10",subject:"Хімія",classroom:"https://classroom.google.com/c/Nzc0Njg5Mzk1MjM5?cjc=zohy2xfl",teacher:"Хілько Інна Анатоліївна",textbook:"https://drive.google.com/file/d/12Mc14QW3GjTMtI3kMgZ3pvxjrLru96ho/view"},{lesson:3,time:"10:20 - 11:05",subject:"Фіз-ра",classroom:"https://classroom.google.com/c/Nzk5OTk3OTc4MDUx?cjc=lnxdivpz",teacher:"Пушкарук Микола Володимирович",textbook:"https://meet.google.com/mth-upyh-fbv"},{lesson:4,time:"11:25 - 12:10",subject:"Громадянська освіта",classroom:"https://classroom.google.com/c/Nzc0NjgxNjg3NTk4?cjc=fa2lidew",teacher:"Федоренко Оксана Іванівна",textbook:"https://drive.google.com/file/d/1poN7DnVqLj-IBjaSJ3TpiMUXO1Zfv1Mi/view?usp=sharing"},{lesson:5,time:"12:20 - 13:05",subject:"Мистецтво",classroom:"https://classroom.google.com/c/Nzc0NzU5MDg4NzUз?cjc=i5odrjn4",teacher:"Старцева Тетяна Вікторівна",textbook:"https://drive.google.com/file/d/1wlMnJgqp-JU-kZjkELLzIIZFreO_LsJ6/view?usp=sharing"},{lesson:6,time:"13:15 - 14:00",subject:"Громадянська освіта",classroom:"https://classroom.google.com/c/Nzc0NjgxNjg3NTk4?cjc=fa2lidew",teacher:"Федоренко Оксана Іванівна",textbook:"https://drive.google.com/file/d/1poN7DnVqLj-IBjaSJ3TpiMUXO1Zfv1Mi/view?usp=drive_link"},{lesson:7,time:"14:10 - 14:55",subject:"Інформатика",classroom:"https://classroom.google.com/c/ODAwMTQ2Njc4NTY1?cjc=ho5zmum4",teacher:"Гончарова Марина Іллівна",textbook:""}],"П'ятниця":[{lesson:1,time:"08:30 - 09:15",subject:"Фіз-ра",classroom:"https://classroom.google.com/c/Nzk5OTk3OTc4MDUx?cjc=lnxdivpz",teacher:"Пушкарук Микола Володимирович",textbook:"https://meet.google.com/mth-upyh-fbv"},{lesson:2,time:"09:25 - 10:10",subject:"Мат-ка (Геометрiя)",classroom:"https://classroom.google.com/c/ODAwMTg4NDI4MzA2?cjc=f3s73a5p",teacher:"Кіляновська Ірина Володимирівна",textbook:"https://drive.google.com/file/d/1zi23AnoLLWisWQ0RiLbsowictHg3FAgH/view?usp=sharing"},{lesson:3,time:"10:20 - 11:05",subject:"Англійська мова",classroom:"https://classroom.google.com/c/Nzk5NTk5NDUyMjYy",teacher:"Яценко Юлія Віталіївна",textbook:"https://drive.google.com/file/d/1wcK4TAuiL5tnRMb9ZbUZ1Zg3omQicvVe/view"},{lesson:4,time:"11:25 - 12:10",subject:"Біологія",classroom:"https://classroom.google.com/c/Nzk5Mjk4MzExMTI1?cjc=nesnovco",teacher:"Писарева Лариса Петрівна",textbook:"https://drive.google.com/file/d/1TnyUqMrfTY1fm07Tam-7_wCFs85QQoDA/view?usp=sharing"},{lesson:5,time:"12:20 - 13:05",subject:"Фізика",classroom:"https://classroom.google.com/c/Nzc0NzM1NjczOTE5?hl=ru&cjc=qy3dlysq",teacher:"Голованова Олена Іванівна",textbook:"https://drive.google.com/file/d/12AaobJ2xtqEwijNQlzRJqsJSj33qafnB/view?usp=sharing"},{lesson:6,time:"13:15 - 14:00",subject:"Українська літ-ра",classroom:"https://classroom.google.com/c/ODAwOTQ2MzAxNjUз",teacher:"Федіна Людмила Миколаївна",textbook:""},{lesson:7,time:"14:10 - 14:55",subject:"Англійська мова",classroom:"https://classroom.google.com/c/Nzk5NTk5NDUyMjYy",teacher:"Яценко Юлія Віталіївна",textbook:"https://drive.google.com/file/d/1wcK4TAuiL5tnRMb9ZbUZ1Zg3omQicvVe/view?usp=sharing"}],"Субота":[{lesson:3,time:"10:20 - 11:05",subject:"Захист України",classroom:"https://classroom.google.com/c/NzgwMTQ3MjM1MDI4?cjc=6h5qkuiv",teacher:"Ржавський Юрій Миколайович",textbook:""},{lesson:4,time:"11:15 - 12:00",subject:"Історія",classroom:"https://classroom.google.com/c/Nzk5NzIwNDU1ODgw?cjc=kq4e7c2h",teacher:"Гочошвілі Інна Олександрівна",textbook:"https://drive.google.com/file/d/1e4BQPSOD0POG8KkRPbdLXaNNWZcEtob6/view?usp=sharing"}]};
+const O=["Понеділок","Вівторок","Середа","Четвер","П'ятниця","Субота"];
+let I=0,T=null,S=null;
+const C='<svg width="32" height="32" viewBox="0 0 32 32"><circle cx="16" cy="16" r="14" fill="#0F9D58"/><rect x="10" y="11" width="12" height="2" fill="white" rx="1"/><rect x="10" y="15" width="12" height="2" fill="white" rx="1"/><rect x="10" y="19" width="8" height="2" fill="white" rx="1"/></svg>';
+const V='<svg viewBox="0 0 87.3 78"><path d="m6.6 66.85 3.85 6.65c.8 1.4 1.95 2.5 3.3 3.3l13.75-23.8h-27.5c0 1.55.4 3.1 1.2 4.5z" fill="#0066da"/><path d="m43.65 25-13.75-23.8c-1.35.8-2.5 1.9-3.3 3.3l-25.4 44a9.06 9.06 0 0 0 -1.2 4.5h27.5z" fill="#00ac47"/><path d="m73.55 76.8c1.35-.8 2.5-1.9 3.3-3.3l1.6-2.75 7.65-13.25c.8-1.4 1.2-2.95 1.2-4.5h-27.502l5.852 11.5z" fill="#ea4335"/><path d="m43.65 25 13.75-23.8c-1.35-.8-2.9-1.2-4.5-1.2h-18.5c-1.6 0-3.15.45-4.5 1.2z" fill="#00832d"/><path d="m59.8 53h-32.3l-13.75 23.8c1.35.8 2.9 1.2 4.5 1.2h50.8c1.6 0 3.15-.45 4.5-1.2z" fill="#2684fc"/><path d="m73.4 26.5-12.7-22c-.8-1.4-1.95-2.5-3.3-3.3l-13.75 23.8 16.15 28h27.45c0-1.55-.4-3.1-1.2-4.5z" fill="#ffba00"/></svg>';
+function G(){return["Неділя","Понеділок","Вівторок","Середа","Четвер","П'ятниця","Субота"][new Date().getDay()]}
+function TI(){return O.indexOf(G())}
+function PT(t){const [h,m]=t.split(':').map(Number);return h*60+m}
+function FD(it){const n=new Date(),M=["січня","лютого","березня","квітня","травня","червня","липня","серпня","вересня","жовтня","листопада","грудня"];const s=String(n.getSeconds()).padStart(2,'0');if(it){return `${n.getDate()} ${M[n.getMonth()]}, ${String(n.getHours()).padStart(2,'0')}:${String(n.getMinutes()).padStart(2,'0')}:${s}`}else{return `<span class="today-link" onclick="I=TI();R()" title="Повернутися на сьогодні">Сьогодні ${G()}</span>`}}
+function SH(s){const R={"Математика (Геометрія)":"Геометрія","Математика (Геометрiя)":"Геометрія","Мат-ка (Геометрія)":"Геометрія","Мат-ка (Геометрiя)":"Геометрія","Математика (Алгебра)":"Алгебра","Мат-ка (Алгебра)":"Алгебра","Українська література":"Укр. літ","Українська літ-ра":"Укр. літ","Укр. літ-ра":"Укр. літ","Українська мова":"Укр. мова","Англійська мова":"Англ. мова","Громадянська освіта":"Громад.","Громад. освіта":"Громад.","Країнознавство":"Країнозн.","Заруб. літ-ра":"Заруб.","Захист України":"Зах. Укр.","Інформатика":"Інформ."};return R[s]||s}
+function FT(f){const p=f.trim().split(/\s+/);if(p.length<2)return `<div class="teacher-name"><div>${f}</div></div>`;return `<div class="teacher-name"><div>${p[0]}</div><div>${p[1]}</div><div>${p.slice(2).join(' ')||''}</div></div>`}
+function R(){const d=O[I],l=D[d],b=document.getElementById('scheduleBody'),ti=TI(),it=I===ti;document.getElementById('dayName').textContent=d;document.getElementById('dayDate').innerHTML=FD(it);document.getElementById('dayCard').classList.toggle('today',it);b.innerHTML='';const n=new Date(),cm=n.getHours()*60+n.getMinutes();let ci=-1,ni=-1;if(it){for(let i=0;i<l.length;i++){const [s,e]=l[i].time.split(' - ');const st=PT(s),et=PT(e);if(cm>=st&&cm<et){ci=i;break}else if(cm<st){ni=i;if(i>0){const pe=PT(l[i-1].time.split(' - ')[1]);if(cm>=pe)break}break}}if(ci===-1&&ni===0){const fs=PT(l[0].time.split(' - ')[0]);if(cm>=fs-20&&cm<fs)ni=0;else ni=-1}}l.forEach((ls,idx)=>{const r=document.createElement('tr');if(it){if(idx===ci)r.classList.add('current');else if(idx===ni)r.classList.add('next')}const cb=ls.classroom?`<button class="icon-button" onclick="window.open('${ls.classroom}','_blank')" title="Classroom">${C}</button>`:`<button class="icon-button disabled" title="Classroom">${C}</button>`;const tb=ls.textbook?`<button class="icon-button" onclick="window.open('${ls.textbook}','_blank')" title="Підручник">${V}</button>`:`<button class="icon-button disabled" title="Підручник">${V}</button>`;r.innerHTML=`<td class="col-num">${ls.lesson}</td><td class="col-time">${ls.time}</td><td class="col-subject"><div class="subject-name">${SH(ls.subject)}</div><div class="subject-icons">${cb}${tb}</div></td><td class="col-teacher">${FT(ls.teacher)}</td>`;b.appendChild(r)});if(T)clearTimeout(T);if(S)clearInterval(S);S=setInterval(()=>{document.getElementById('dayDate').innerHTML=FD(it)},1000);if(it){const ev=[];l.forEach(ls=>{const [s,e]=ls.time.split(' - ');ev.push(PT(s),PT(e))});const fs=PT(l[0].time.split(' - ')[0]);ev.push(fs-20);const ne=ev.filter(t=>t>cm).sort((a,b)=>a-b)[0];if(ne){const w=(ne-cm)*60*1000;T=setTimeout(R,w)}}}
+document.getElementById('btnPrev').onclick=()=>{I=(I-1+O.length)%O.length;R()};
+document.getElementById('btnNext').onclick=()=>{I=(I+1)%O.length;R()};
+document.addEventListener('keydown',e=>{if(e.key==='ArrowLeft'){I=(I-1+O.length)%O.length;R()}else if(e.key==='ArrowRight'){I=(I+1)%O.length;R()}else if(e.key==='t'||e.key==='T'){I=TI();R()}});
+I=TI();R();
+</script>
+</body>
+</html>
