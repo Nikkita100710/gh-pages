@@ -104,6 +104,15 @@ document.getElementById('btnPrev').onclick=()=>{I=(I-1+O.length)%O.length;R()};
 document.getElementById('btnNext').onclick=()=>{I=(I+1)%O.length;R()};
 document.addEventListener('keydown',e=>{if(e.key==='ArrowLeft'){I=(I-1+O.length)%O.length;R()}else if(e.key==='ArrowRight'){I=(I+1)%O.length;R()}else if(e.key==='t'||e.key==='T'){I=TI();R()}});
 I=TI();R();
+  setInterval(() => {
+    const currentDayIndex = TI();
+    if (I !== currentDayIndex) {
+        I = currentDayIndex;
+        R();
+    }
+}, 10 * 60 * 1000); // кожні 10 хвилин
+  
 </script>
 </body>
+
 </html>
